@@ -12,7 +12,11 @@ echo "==> Installing backend dependencies"
 npm --prefix backend ci --omit=dev
 
 echo "==> Installing frontend dependencies"
-npm --prefix frontend ci
+# --include=dev is load-bearing: .replit sets NODE_ENV=production for the whole
+# Repl, and npm reads that as omit=dev. Without this flag react-scripts (a
+# devDependency) is never installed and the build below fails with
+# "react-scripts: not found".
+npm --prefix frontend ci --include=dev
 
 echo "==> Building the frontend"
 # Relative API URL: the API serves these files, so requests are same-origin.
