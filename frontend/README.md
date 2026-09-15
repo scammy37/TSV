@@ -44,6 +44,15 @@ src/
   index.css            Design tokens and all styling
 ```
 
+## Dependencies
+
+`package.json` carries an `overrides` entry pinning `typescript` to `^4.9.5`.
+The project has no TypeScript; the pin exists because `react-scripts@5.0.1`
+declares an optional peer of `^3.2.1 || ^4`, while a transitive peer accepts
+`>= 2.7`. Without the pin npm hoists TypeScript 7, and `npm ci` then rejects
+the lockfile as out of sync -- so CI cannot install at all. Remove the pin only
+alongside an upgrade off `react-scripts` 5.
+
 ## Notes
 
 - **Roles.** `ProtectedRoute` gates by role; the API enforces the same rules, so

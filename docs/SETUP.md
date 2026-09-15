@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js 16+
+- Node.js 20+ (CI covers 20 and 22)
 - PostgreSQL 12+
 - Git
 
@@ -70,6 +70,20 @@ cd backend && npm test
 
 Creates and migrates a separate `tsv_test` database automatically. It never
 touches `tsv_db`.
+
+## CI
+
+`.github/workflows/ci.yml` runs on every pull request and on pushes to `main`:
+
+- **Backend tests** on Node 20 and 22, against a PostgreSQL 16 service
+  container. The suite provisions its own test database, so the workflow only
+  supplies `DB_HOST`/`DB_PORT`/`DB_USER`/`DB_PASSWORD`.
+- **Frontend build** with `CI=true`, which promotes lint warnings to errors and
+  so covers linting as well as compilation.
+
+Both jobs install with `npm ci`, which enforces that `package-lock.json` is in
+sync with `package.json`. If you change dependencies, commit the regenerated
+lockfile or CI will fail before running anything.
 
 ## Resetting
 
