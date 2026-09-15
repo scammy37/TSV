@@ -7,10 +7,13 @@ const { PRIORITY_LABELS, STATUS_LABELS } = require('../constants');
 let transporter;
 let warnedUnconfigured = false;
 
+/** True when there is enough configuration to actually send mail. */
+const isConfigured = () => Boolean(config.smtp.host && config.smtp.user);
+
 // Built lazily so importing this module never opens a connection, and so tests
 // can run without any SMTP configuration at all.
 const getTransporter = () => {
-  if (!config.smtp.host || !config.smtp.user) return null;
+  if (!isConfigured()) return null;
   if (!transporter) {
     transporter = nodemailer.createTransport({
       host: config.smtp.host,
@@ -111,6 +114,23 @@ const templates = {
       ${detailRows(ticket)}
       <p style="font-size:14px;color:#67707f">
         If the issue is not fixed, add a comment and we will reopen it.</p>`, ticket),
+  }),
+
+  password_reset: ({ user, resetUrl, ttlMinutes }) => ({
+    subject: 'Reset your password',
+    html: layout('Reset your password', `
+      <p>Hi ${escapeHtml(user.first_name)}, someone asked to reset the password
+         for this account.</p>
+      <p style="margin:20px 0">
+        <a href="${resetUrl}"
+           style="background:#2f6fed;color:#fff;text-decoration:none;
+                  padding:10px 18px;border-radius:6px;display:inline-block">
+          Choose a new password
+        </a>
+      </p>
+      <p style="font-size:14px;color:#67707f">
+        This link works once and expires in ${ttlMinutes} minutes. If you did not
+        request it, you can ignore this email -- your password will not change.</p>`),
   }),
 
   ticket_comment: ({ ticket, comment, author }) => ({
@@ -226,4 +246,64 @@ const notifyManagement = (templateName, context, { exclude = [] } = {}) => {
   return promise;
 };
 
-module.exports = { send, notify, notifyManagement, flush, templates, managementRecipients };
+/**
+ * Proves the SMTP settings before anything depends on them. Called at boot and
+ * by `npm run check:email`, so a misconfiguration surfaces immediately rather
+ * than as silently missing notifications weeks later.
+ */
+const verify = async () => {
+  if (!isConfigured()) {
+    return { ok: false, configured: false, reason: 'SMTP_HOST and SMTP_USER are not set' };
+  }
+  try {
+    await getTransporter().verify();
+    return { ok: true, configured: true };
+  } catch (err) {
+    return { ok: false, configured: true, reason: err.message };
+  }
+};
+
+/**
+ * Boot-time check. Notifications are best-effort by design, which means a bad
+ * password would otherwise fail invisibly -- so say so loudly, and treat it as
+ * a misconfiguration in production rather than a normal state.
+ */
+const verifyAtStartup = async () => {
+  const result = await verify();
+
+  if (result.ok) {
+    console.log(`Email: connected to ${config.smtp.host} as ${config.smtp.user}`);
+    return result;
+  }
+
+  if (!result.configured) {
+    const message = 'Email: SMTP is not configured. Notifications will be recorded '
+      + "in email_logs with status 'skipped' and never delivered.";
+    if (config.isProduction) {
+      console.error(`WARNING -- ${message} Set SMTP_HOST, SMTP_USER and SMTP_PASS.`);
+    } else if (!config.isTest) {
+      console.warn(message);
+    }
+    return result;
+  }
+
+  console.error(
+    `WARNING -- Email: SMTP is configured but the connection failed: ${result.reason}\n`
+    + '          Notifications will be recorded as failed. Check SMTP_HOST, SMTP_PORT, '
+    + 'SMTP_USER and SMTP_PASS.\n'
+    + '          For Gmail, SMTP_PASS must be an App Password, not the account password.',
+  );
+  return result;
+};
+
+module.exports = {
+  send,
+  notify,
+  notifyManagement,
+  flush,
+  verify,
+  verifyAtStartup,
+  isConfigured,
+  templates,
+  managementRecipients,
+};

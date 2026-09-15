@@ -16,8 +16,8 @@ const { pool } = require('../db/connection');
 const SCHEMA_PATH = path.join(__dirname, '..', 'db', 'schema.sql');
 
 const DROP_SQL = `
-  DROP TABLE IF EXISTS email_logs, ticket_activity, ticket_comments, tickets,
-                       categories, users CASCADE;
+  DROP TABLE IF EXISTS password_reset_tokens, email_logs, ticket_activity,
+                       ticket_comments, tickets, categories, users CASCADE;
   DROP SEQUENCE IF EXISTS ticket_number_seq;
   DROP FUNCTION IF EXISTS set_updated_at() CASCADE;
 `;

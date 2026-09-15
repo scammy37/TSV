@@ -8,6 +8,8 @@
     "dev": "nodemon server.js",
     "migrate": "node scripts/migrate.js",
     "seed": "node scripts/seed.js",
+    "create-admin": "node scripts/create-admin.js",
+    "check:email": "node scripts/check-email.js",
     "test": "cross-env NODE_ENV=test jest --runInBand",
     "test:watch": "cross-env NODE_ENV=test jest --runInBand --watch"
   },

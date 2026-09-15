@@ -42,6 +42,15 @@ const changePassword = Joi.object({
     .messages({ 'any.invalid': 'New password must differ from the current one' }),
 });
 
+const requestPasswordReset = Joi.object({
+  email: email.required(),
+});
+
+const resetPassword = Joi.object({
+  token: Joi.string().hex().length(64).required(),
+  password: password.required(),
+});
+
 const createTicket = Joi.object({
   title: Joi.string().trim().min(5).max(255).required(),
   description: Joi.string().trim().min(10).max(10000).required(),
@@ -116,6 +125,8 @@ module.exports = {
   login,
   updateProfile,
   changePassword,
+  requestPasswordReset,
+  resetPassword,
   createTicket,
   updateTicket,
   assignTicket,

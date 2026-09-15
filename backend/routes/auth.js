@@ -10,6 +10,8 @@ const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const { publicUser } = require('../utils/serialize');
 const { ROLES } = require('../constants');
+const email = require('../services/email');
+const passwordReset = require('../services/passwordReset');
 
 const router = express.Router();
 
@@ -63,6 +65,52 @@ router.post('/login', validate(schemas.login), asyncHandler(async (req, res) => 
   if (!user.is_active) throw AppError.forbidden('This account has been deactivated');
 
   res.json({ token: signToken(user), user: publicUser(user) });
+}));
+
+/**
+ * POST /api/auth/forgot-password
+ * Always answers the same way, whether or not the address is registered:
+ * a differing response here is an account-enumeration oracle.
+ */
+router.post('/forgot-password', validate(schemas.requestPasswordReset), asyncHandler(async (req, res) => {
+  const { rows } = await db.query(
+    'SELECT * FROM users WHERE lower(email) = lower($1) AND is_active',
+    [req.body.email],
+  );
+  const user = rows[0];
+
+  if (user) {
+    const { token } = await passwordReset.issue(user.id);
+    const resetUrl = `${config.frontendUrl.split(',')[0]}/reset-password?token=${token}`;
+    email.notify('password_reset', user.email, {
+      user,
+      resetUrl,
+      ttlMinutes: passwordReset.TOKEN_TTL_MINUTES,
+    });
+  }
+
+  res.json({
+    message: 'If that email is registered, a reset link is on its way.',
+  });
+}));
+
+/**
+ * POST /api/auth/reset-password
+ * Consumes the token and sets the new password. Tokens are single use, so a
+ * link that has already been followed fails here even within its lifetime.
+ */
+router.post('/reset-password', validate(schemas.resetPassword), asyncHandler(async (req, res) => {
+  const user = await passwordReset.consume(req.body.token);
+  if (!user) {
+    throw AppError.badRequest('That reset link is invalid or has expired. Request a new one.');
+  }
+
+  const passwordHash = await bcrypt.hash(req.body.password, config.bcryptRounds);
+  await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, user.id]);
+
+  // Signing in immediately saves a round trip and proves the reset worked.
+  const { rows } = await db.query('SELECT * FROM users WHERE id = $1', [user.id]);
+  res.json({ token: signToken(rows[0]), user: publicUser(rows[0]) });
 }));
 
 /** GET /api/auth/me */
