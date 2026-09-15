@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -51,6 +54,29 @@ app.use('/api/meta', authenticate, require('./routes/meta'));
 app.use('/api/tickets', require('./routes/tickets'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/reports', require('./routes/reports'));
+
+// Optionally serve the built frontend from the API. Everything then lives on
+// one origin, which is what the devcontainer uses.
+if (config.serveFrontend) {
+  const buildDir = path.join(__dirname, '..', 'frontend', 'build');
+  const indexHtml = path.join(buildDir, 'index.html');
+
+  if (fs.existsSync(indexHtml)) {
+    app.use(express.static(buildDir));
+
+    // SPA fallback: a GET outside /api returns index.html so that deep links
+    // like /tickets/12 are routed by React rather than 404ing here.
+    app.use((req, res, next) => {
+      if (req.method !== 'GET' || req.path.startsWith('/api')) return next();
+      return res.sendFile(indexHtml);
+    });
+  } else {
+    console.warn(
+      'SERVE_FRONTEND=true but frontend/build is missing. '
+      + 'Run `npm run build` in frontend/ first.',
+    );
+  }
+}
 
 app.use(notFound);
 app.use(errorHandler);

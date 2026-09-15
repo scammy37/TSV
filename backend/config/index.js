@@ -47,6 +47,11 @@ const config = {
   },
 
   bcryptRounds: int(process.env.BCRYPT_ROUNDS, env === 'test' ? 4 : 10),
+
+  // When true the API also serves frontend/build, so the whole app runs on one
+  // origin and needs no CORS configuration. Used by the devcontainer and by
+  // single-service deployments.
+  serveFrontend: process.env.SERVE_FRONTEND === 'true',
 };
 
 if (config.isProduction && !config.jwt.secret) {

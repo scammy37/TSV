@@ -85,6 +85,49 @@ Both jobs install with `npm ci`, which enforces that `package-lock.json` is in
 sync with `package.json`. If you change dependencies, commit the regenerated
 lockfile or CI will fail before running anything.
 
+## Running it as one service
+
+Setting `SERVE_FRONTEND=true` makes the API serve `frontend/build` as well, so
+the whole app runs on a single port with no CORS configuration:
+
+```bash
+cd frontend && REACT_APP_API_URL=/api npm run build
+cd ../backend && SERVE_FRONTEND=true npm start   # whole app on :5000
+```
+
+This is what the devcontainer does, and it is the simplest shape to deploy:
+one process, one origin. Requests under `/api` are handled by the API; every
+other GET returns `index.html` so client-side routes work on a hard refresh.
+
+## Demo data
+
+```bash
+cd backend && npm run seed
+```
+
+Loads six accounts and eight tickets spread across statuses, priorities and
+dates, including overdue and resolved work so the reports page is not empty.
+All demo accounts use the password `Password123!`; override with
+`SEED_PASSWORD`. The script is a no-op if the demo data is already there, and
+refuses to run when `NODE_ENV=production`.
+
+## Codespaces
+
+`.devcontainer/` provides a one-click environment: PostgreSQL, dependencies,
+schema, demo data and a built frontend, served on port 5000. Create one from
+**Code → Codespaces** on GitHub. To rebuild from scratch, run
+**Codespaces: Rebuild Container** from the command palette.
+
+Useful inside the codespace:
+
+```bash
+bash .devcontainer/start.sh                 # start the app (idempotent)
+pkill -f "node server.js"                   # stop it
+cat .devcontainer/logs/api.log              # server output
+npm --prefix backend run migrate -- --reset # wipe and rebuild the database
+npm --prefix backend run seed               # reload demo data
+```
+
 ## Resetting
 
 ```bash

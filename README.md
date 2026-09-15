@@ -48,7 +48,30 @@ assigns, and resolves them against SLA targets.
 - Append-only activity log on every ticket
 - Every notification recorded in `email_logs`, sent or not
 
-## Getting Started
+## Try it without installing anything
+
+On GitHub, click **Code → Codespaces → Create codespace on this branch** and
+wait a couple of minutes for it to build. The devcontainer starts PostgreSQL, installs
+dependencies, applies the schema, loads demo data and builds the frontend, then
+serves the whole app on port 5000. Click the globe icon next to port 5000 in the
+**Ports** tab to open it.
+
+Demo accounts (password `Password123!`):
+
+| Account | Role | What you see |
+|---|---|---|
+| `manager@demo.test` | management | Triage queue, reports, people directory |
+| `sam@demo.test` | staff | Assigned work, internal notes |
+| `dana@demo.test` | homeowner | Only their own requests |
+
+Sign in as the manager and the homeowner in two browser profiles to watch both
+sides of the same ticket. The seeded data includes overdue tickets, an internal
+note, and resolved work, so the reports page has something to show.
+
+Codespaces is free for a monthly allowance on personal accounts and the
+codespace stops on its own when idle.
+
+## Getting Started (local)
 
 See **[docs/SETUP.md](docs/SETUP.md)** for the full walkthrough. The short version:
 
@@ -64,7 +87,8 @@ cd ../frontend && npm install && cp .env.example .env && npm start
 
 Then register a homeowner and a management account at
 <http://localhost:3000/register>. Management signup needs the
-`STAFF_INVITE_CODE` you put in `backend/.env`.
+`STAFF_INVITE_CODE` you put in `backend/.env`. Or run
+`npm run seed` in `backend` to load the same demo accounts the Codespace uses.
 
 ## Development
 
