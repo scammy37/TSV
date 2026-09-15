@@ -5,6 +5,8 @@ const email = require('./services/email');
 
 const server = app.listen(config.port, () => {
   console.log(`${config.appName} API listening on port ${config.port} (${config.env})`);
+  // Reports the state of email rather than letting it fail silently later.
+  email.verifyAtStartup().catch((err) => console.error('Email check failed:', err.message));
 });
 
 // Finish in-flight requests and close the pool before exiting.

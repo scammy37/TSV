@@ -1,14 +1,9 @@
 const { Pool } = require('pg');
 const config = require('../config');
 
-const pool = new Pool({
-  host: config.db.host,
-  port: config.db.port,
-  user: config.db.user,
-  password: config.db.password,
-  database: config.db.database,
-  max: config.db.max,
-});
+// config.db is either a discrete host/user/password set or a connectionString,
+// depending on whether the host provided DATABASE_URL. pg accepts both shapes.
+const pool = new Pool(config.db);
 
 pool.on('error', (err) => {
   console.error('Unexpected error on idle PostgreSQL client', err);

@@ -42,6 +42,7 @@ assigns, and resolves them against SLA targets.
 
 ### Core
 - Role-based access control (homeowner / staff / management), enforced in the API
+- Self-service password reset, with single-use hashed tokens that expire in an hour
 - JWT authentication; deactivating an account invalidates its token immediately
 - Enforced status transitions, so the audit trail cannot contain nonsense
 - SLA deadlines by priority, measured from when the ticket was filed
@@ -89,6 +90,18 @@ Then register a homeowner and a management account at
 <http://localhost:3000/register>. Management signup needs the
 `STAFF_INVITE_CODE` you put in `backend/.env`. Or run
 `npm run seed` in `backend` to load the same demo accounts the Codespace uses.
+
+## Deploying
+
+See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**. The app deploys as one service:
+the API serves the built frontend, so there is one process, one port and one
+origin. `.replit` is configured for Replit; the same build and run commands work
+on any host that provides `DATABASE_URL`.
+
+Two things to do before real residents use it: create the first manager with
+`npm run create-admin` rather than the demo seed, and prove email works with
+`npm run check:email` — notifications fail silently by design, so an
+unconfigured mail server means no one is ever notified of anything.
 
 ## Development
 

@@ -48,6 +48,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api', apiLimiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
+app.use('/api/auth/reset-password', authLimiter);
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/meta', authenticate, require('./routes/meta'));

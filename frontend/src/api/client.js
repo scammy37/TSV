@@ -60,6 +60,8 @@ export const api = {
   me: () => client.get('/auth/me').then((r) => r.data.user),
   updateProfile: (payload) => client.patch('/auth/me', payload).then((r) => r.data.user),
   changePassword: (payload) => client.post('/auth/change-password', payload).then((r) => r.data),
+  forgotPassword: (email) => client.post('/auth/forgot-password', { email }).then((r) => r.data),
+  resetPassword: (payload) => client.post('/auth/reset-password', payload).then((r) => r.data),
 
   meta: () => client.get('/meta').then((r) => r.data),
 

@@ -39,6 +39,13 @@ export function AuthProvider({ children }) {
     return loggedIn;
   }, []);
 
+  // Shared by the reset page, which is handed a session by the API once the
+  // new password is set.
+  const adoptSession = useCallback((token, nextUser) => {
+    setToken(token);
+    setUser(nextUser);
+  }, []);
+
   const register = useCallback(async (payload) => {
     const { token, user: created } = await api.register(payload);
     setToken(token);
@@ -53,9 +60,10 @@ export function AuthProvider({ children }) {
     register,
     logout,
     setUser,
+    adoptSession,
     isStaff: Boolean(user) && STAFF_ROLES.includes(user.role),
     isManagement: user?.role === 'management',
-  }), [user, loading, login, register, logout]);
+  }), [user, loading, login, register, logout, adoptSession]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

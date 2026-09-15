@@ -158,3 +158,20 @@ CREATE TABLE IF NOT EXISTS email_logs (
 );
 
 CREATE INDEX IF NOT EXISTS idx_email_logs_ticket ON email_logs (ticket_id);
+
+-- -----------------------------------------------------------------------------
+-- password_reset_tokens
+-- Only the SHA-256 of each token is stored, so a database leak does not hand
+-- over working reset links. Rows are single use and short lived.
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id         SERIAL PRIMARY KEY,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash CHAR(64) UNIQUE NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at    TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_reset_tokens_user ON password_reset_tokens (user_id);
+CREATE INDEX IF NOT EXISTS idx_reset_tokens_expiry ON password_reset_tokens (expires_at);
