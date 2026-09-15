@@ -1,15 +1,35 @@
 const { Pool } = require('pg');
+const config = require('../config');
 
 const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+  host: config.db.host,
+  port: config.db.port,
+  user: config.db.user,
+  password: config.db.password,
+  database: config.db.database,
+  max: config.db.max,
 });
 
 pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
+  console.error('Unexpected error on idle PostgreSQL client', err);
 });
 
-module.exports = pool;
+const query = (text, params) => pool.query(text, params);
+
+// Runs `fn` inside a transaction on a dedicated client, rolling back on throw.
+const transaction = async (fn) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await fn(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+};
+
+module.exports = { pool, query, transaction };
