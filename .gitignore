@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.local
+*.log
+npm-debug.log*
+coverage/
+build/
+dist/
+.DS_Store
+.vscode/
+.idea/
+
+# devcontainer runtime output
+.devcontainer/logs/

@@ -1,28 +1,24 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
+const config = require('./config');
+const app = require('./app');
+const { pool } = require('./db/connection');
+const email = require('./services/email');
 
-const app = express();
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Routes (to be created)
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'Server is running', timestamp: new Date() });
+const server = app.listen(config.port, () => {
+  console.log(`${config.appName} API listening on port ${config.port} (${config.env})`);
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Internal server error' });
-});
+// Finish in-flight requests and close the pool before exiting.
+const shutdown = (signal) => {
+  console.log(`\n${signal} received, shutting down...`);
+  server.close(async () => {
+    // Let queued notifications finish before dropping the connection pool.
+    await email.flush();
+    await pool.end();
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 10000).unref();
+};
 
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+['SIGINT', 'SIGTERM'].forEach((signal) => process.on(signal, () => shutdown(signal)));
+
+module.exports = server;
