@@ -43,7 +43,9 @@ service and its PostgreSQL database together, already wired to each other.
 4. Add the `SMTP_*` values under **Environment** on the service, if you want
    email, and let it redeploy. Keep them in the dashboard, never in
    `render.yaml` — that file is committed.
-5. Create the first manager from the service's **Shell** tab (see below).
+5. Create the first manager (see below). Render's **Shell** tab is only
+   available on paid instance types, so on a free instance use the invite-code
+   route rather than `create-admin`.
 
 `FRONTEND_URL` needs no configuration here: Render exports the public URL as
 `RENDER_EXTERNAL_URL` and the app falls back to it, so password reset links
@@ -77,13 +79,33 @@ Provide `DATABASE_URL` and `JWT_SECRET`, and point the host's health check at
 Do **not** use `npm run seed` — it is demo data and refuses to run under
 `NODE_ENV=production`.
 
+Where you have a shell on the running service — a VM, a container, or a Render
+instance on a paid plan:
+
 ```bash
 npm --prefix backend run create-admin -- you@example.com "Your Name"
 ```
 
-It prints a generated password once, or uses `ADMIN_PASSWORD` if set. Promote
-everyone else from the People page in the app. With `STAFF_INVITE_CODE` blank,
-staff self-registration is refused outright and homeowner signup is unaffected.
+It prints a generated password once, or uses `ADMIN_PASSWORD` if set.
+
+**Without a shell** (a Render free instance, for one) the same thing is done
+through the app's own signup, by opening staff registration just long enough to
+use it:
+
+1. Set `STAFF_INVITE_CODE` to a strong random value in the host's environment
+   and let the service restart. Generate one with
+   `node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"`.
+   Placeholder values are refused at boot.
+2. Register at `/register` with the **management** role and that code.
+3. **Remove `STAFF_INVITE_CODE`** and let the service restart again.
+
+Step 3 is the point of the exercise: while the code is set, anyone holding it
+can grant themselves management access. Removing it returns the deployment to
+refusing staff self-registration outright.
+
+Either way, promote everyone else from the People page in the app. With
+`STAFF_INVITE_CODE` unset, staff self-registration is refused and homeowner
+signup is unaffected.
 
 ## Prove email works before anyone relies on it
 
