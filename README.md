@@ -95,8 +95,9 @@ Then register a homeowner and a management account at
 
 See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**. The app deploys as one service:
 the API serves the built frontend, so there is one process, one port and one
-origin. `.replit` is configured for Replit; the same build and run commands work
-on any host that provides `DATABASE_URL`.
+origin. `render.yaml` provisions the service and its database on Render in one
+step; the same build and run commands work on any host that provides
+`DATABASE_URL`.
 
 Two things to do before real residents use it: create the first manager with
 `npm run create-admin` rather than the demo seed, and prove email works with

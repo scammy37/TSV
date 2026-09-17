@@ -15,7 +15,14 @@ const config = {
   isTest: env === 'test',
   port: int(process.env.PORT, 5000),
   appName: process.env.APP_NAME || 'TSV - Ticket Management System',
-  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+  // Emailed links (password reset above all) have to point at the real
+  // deployment, and the public URL is not known until the host has assigned
+  // one. Render exports it as RENDER_EXTERNAL_URL, so the common case needs no
+  // configuration; FRONTEND_URL still wins where it is set, and is required on
+  // a host that exports nothing.
+  frontendUrl: process.env.FRONTEND_URL
+    || process.env.RENDER_EXTERNAL_URL
+    || 'http://localhost:3000',
 
   // Managed hosts (Replit, Render, Railway, Fly, Heroku) hand over one
   // DATABASE_URL; local development uses the discrete variables. Tests always

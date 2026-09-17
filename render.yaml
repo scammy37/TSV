@@ -1,0 +1,36 @@
+# Render Blueprint. Creating a Blueprint from this file provisions the web
+# service and its database together, already wired to each other.
+#
+# The API serves the built frontend, so this is one service on one port.
+services:
+  - type: web
+    name: tsv
+    runtime: node
+    plan: free
+    buildCommand: bash scripts/build.sh
+    startCommand: npm --prefix backend start
+    # The app answers here as soon as it has booted and reached the database.
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SERVE_FRONTEND
+        value: "true"
+      # Render generates this once and keeps it. Nobody has to invent,
+      # transport or store a secret by hand.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tsv-db
+          property: connectionString
+      # STAFF_INVITE_CODE is deliberately absent: with no value, staff
+      # self-registration is refused and the first manager comes from
+      # `npm run create-admin`. SMTP_* belong in the dashboard, not here --
+      # this file is committed.
+
+databases:
+  - name: tsv-db
+    plan: free
+    databaseName: tsv
+    user: tsv
