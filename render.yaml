@@ -4,7 +4,7 @@
 # The API serves the built frontend, so this is one service on one port.
 services:
   - type: web
-    name: tsv
+    name: tsvnj
     runtime: node
     plan: free
     buildCommand: bash scripts/build.sh
