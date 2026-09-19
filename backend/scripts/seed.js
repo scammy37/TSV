@@ -11,7 +11,6 @@ const bcrypt = require('bcryptjs');
 
 const config = require('../config');
 const db = require('../db/connection');
-const { slaDeadline } = require('../utils/sla');
 
 const PASSWORD = process.env.SEED_PASSWORD || 'Password123!';
 
@@ -40,14 +39,14 @@ const TICKETS = [
   {
     homeowner: 'alex@demo.test', title: 'Hallway light flickering all night',
     description: 'The light outside my door flickers constantly and is keeping us awake.',
-    category: 'electrical', priority: 'urgent', assignee: 'priya@demo.test',
+    category: 'electrical', priority: 'high', assignee: 'priya@demo.test',
     status: 'in_progress', daysAgo: 1,
     comments: [{ from: 'priya@demo.test', body: 'Replacing the ballast this afternoon.' }],
   },
   {
     homeowner: 'jordan@demo.test', title: 'No hot water since Tuesday',
     description: 'The water never gets above lukewarm, at any time of day.',
-    category: 'plumbing', priority: 'urgent', daysAgo: 0,
+    category: 'plumbing', priority: 'high', daysAgo: 0,
   },
   {
     homeowner: 'dana@demo.test', title: 'Dishwasher not draining properly',
@@ -125,16 +124,15 @@ async function seed() {
     const { rows } = await db.query(
       `INSERT INTO tickets (ticket_number, homeowner_id, created_by, assigned_to, category,
                             priority, status, title, description, location_details, unit_number,
-                            sla_deadline, first_response_at, resolved_at, closed_at,
+                            first_response_at, resolved_at, closed_at,
                             resolution_notes, created_at, updated_at)
        VALUES ($1,$2,$2,$3,$4,$5,$6,$7,$8,$9,
                (SELECT unit_number FROM users WHERE id = $2),
-               $10,$11,$12,$13,$14,$15,$15)
+               $10,$11,$12,$13,$14,$14)
        RETURNING id`,
       [
         ticketNumber, ids[t.homeowner], assignee, t.category, t.priority, status,
         t.title, t.description, t.location || null,
-        slaDeadline(t.priority, createdAt),
         assignee ? daysAgoTs(t.daysAgo - 0.2) : null,
         resolvedAt,
         status === 'closed' ? resolvedAt : null,

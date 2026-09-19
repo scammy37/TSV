@@ -13,7 +13,6 @@ const DEFAULT_FILTERS = {
   priority: '',
   category: '',
   assignedTo: '',
-  overdue: false,
   sort: 'created_at',
   order: 'desc',
   page: 1,
@@ -21,11 +20,11 @@ const DEFAULT_FILTERS = {
 
 // Quick views sit above the filter bar; each one just presets the filters.
 const QUICK_VIEWS = [
-  { key: 'active', label: 'Active', patch: { status: '', assignedTo: '', overdue: false, open: true } },
-  { key: 'unassigned', label: 'Unassigned', patch: { assignedTo: 'unassigned', overdue: false, open: true } },
-  { key: 'mine', label: 'Assigned to me', patch: { assignedTo: 'me', overdue: false, open: true } },
-  { key: 'overdue', label: 'Overdue', patch: { overdue: true, assignedTo: '', open: true } },
-  { key: 'all', label: 'All tickets', patch: { assignedTo: '', overdue: false, open: undefined } },
+  { key: 'active', label: 'Active', patch: { status: '', assignedTo: '', open: true, sort: 'created_at', order: 'desc' } },
+  { key: 'unassigned', label: 'Unassigned', patch: { assignedTo: 'unassigned', open: true } },
+  { key: 'mine', label: 'Assigned to me', patch: { assignedTo: 'me', open: true } },
+  { key: 'oldest', label: 'Oldest first', patch: { assignedTo: '', open: true, sort: 'created_at', order: 'asc' } },
+  { key: 'all', label: 'All tickets', patch: { assignedTo: '', open: undefined } },
 ];
 
 export default function ManagementDashboard() {
@@ -167,7 +166,6 @@ export default function ManagementDashboard() {
               <option value="created_at">Newest first</option>
               <option value="updated_at">Recently updated</option>
               <option value="priority">Priority</option>
-              <option value="sla_deadline">SLA deadline</option>
             </select>
           </div>
         </div>

@@ -10,7 +10,6 @@ const serialize = require('../utils/serialize');
 const activity = require('../services/activity');
 const email = require('../services/email');
 const tickets = require('../services/tickets');
-const { slaDeadline } = require('../utils/sla');
 const { TERMINAL_STATUSES } = require('../constants');
 
 const router = express.Router();
@@ -31,7 +30,7 @@ const loadTicket = asyncHandler(async (req, res, next) => {
 /**
  * GET /api/tickets
  * Homeowners get their own tickets; staff and management get everything, with
- * filters for status, priority, category, assignee, overdue and free text.
+ * filters for status, priority, category, assignee and free text.
  */
 router.get('/', validate(schemas.listTickets, 'query'), asyncHandler(async (req, res) => {
   const result = await tickets.list(req.query, req.user);
@@ -66,11 +65,11 @@ router.post('/', validate(schemas.createTicket), asyncHandler(async (req, res) =
     const ticketNumber = await tickets.nextTicketNumber(client);
     const { rows } = await client.query(
       `INSERT INTO tickets (ticket_number, homeowner_id, created_by, category, priority,
-                            title, description, location_details, unit_number, sla_deadline)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                            title, description, location_details, unit_number)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING id`,
       [ticketNumber, ownerId, req.user.id, category, priority, title, description,
-        locationDetails || null, unitNumber || owner.unit_number || null, slaDeadline(priority)],
+        locationDetails || null, unitNumber || owner.unit_number || null],
     );
 
     await activity.record({
@@ -145,12 +144,6 @@ router.patch('/:id', loadTicket, validate(schemas.updateTicket), asyncHandler(as
 
   if (!sets.length) {
     return res.json({ ticket: serialize.ticket(before), changed: [] });
-  }
-
-  // Re-prioritising moves the SLA clock, still measured from when it was filed.
-  if (req.body.priority !== undefined && req.body.priority !== before.priority) {
-    values.push(slaDeadline(req.body.priority, before.created_at));
-    sets.push(`sla_deadline = $${values.length}`);
   }
 
   const nextStatus = req.body.status;

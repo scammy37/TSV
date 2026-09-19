@@ -40,7 +40,6 @@ export default function NewTicket() {
 
   if (metaLoading) return <Spinner center />;
 
-  const selectedPriority = meta?.priorities.find((p) => p.value === form.priority);
 
   return (
     <>
@@ -80,11 +79,6 @@ export default function NewTicket() {
                   <option key={p.value} value={p.value}>{p.label}</option>
                 ))}
               </select>
-              {selectedPriority && (
-                <div className="field-hint">
-                  Target response within {selectedPriority.slaHours} hours.
-                </div>
-              )}
             </div>
           </div>
 

@@ -48,7 +48,7 @@ export default function Reports() {
       <div className="page-head">
         <div>
           <h1>Reports</h1>
-          <p>Volume, workload and SLA performance across the complex.</p>
+          <p>Volume, workload and ticket age across the complex.</p>
         </div>
       </div>
 
@@ -58,22 +58,20 @@ export default function Reports() {
           <div className="stat-value">{totals.open}</div>
           <div className="stat-sub">{totals.total} all time</div>
         </div>
-        <div className={`stat${totals.overdue > 0 ? ' alarm' : ''}`}>
-          <div className="stat-label">Overdue</div>
-          <div className="stat-value">{totals.overdue}</div>
-          <div className="stat-sub">past their SLA deadline</div>
+        <div className={`stat${totals.agingOpen > 0 ? ' alarm' : ''}`}>
+          <div className="stat-label">Open over a week</div>
+          <div className="stat-value">{totals.agingOpen}</div>
+          <div className="stat-sub">still unresolved</div>
         </div>
         <div className={`stat${totals.unassigned > 0 ? ' alarm' : ''}`}>
           <div className="stat-label">Unassigned</div>
           <div className="stat-value">{totals.unassigned}</div>
           <div className="stat-sub">waiting for an owner</div>
         </div>
-        <div className={`stat${totals.slaCompliance >= 90 ? ' good' : ''}`}>
-          <div className="stat-label">SLA met</div>
-          <div className="stat-value">
-            {totals.slaCompliance === null ? '--' : `${totals.slaCompliance}%`}
-          </div>
-          <div className="stat-sub">of resolved tickets</div>
+        <div className="stat">
+          <div className="stat-label">Oldest open</div>
+          <div className="stat-value">{formatHours(totals.oldestOpenHours)}</div>
+          <div className="stat-sub">longest unresolved</div>
         </div>
         <div className="stat">
           <div className="stat-label">Avg resolution</div>
@@ -126,7 +124,7 @@ export default function Reports() {
               <tr>
                 <th>Staff member</th>
                 <th className="num">Open</th>
-                <th className="num">Overdue</th>
+                <th className="num">Over a week</th>
                 <th className="num">Resolved (30d)</th>
               </tr>
             </thead>
@@ -137,8 +135,8 @@ export default function Reports() {
                 <tr key={a.id}>
                   <td>{a.fullName}</td>
                   <td className="num">{a.openCount}</td>
-                  <td className="num" style={a.overdueCount > 0 ? { color: 'var(--danger)', fontWeight: 650 } : undefined}>
-                    {a.overdueCount}
+                  <td className="num" style={a.agingCount > 0 ? { color: 'var(--danger)', fontWeight: 650 } : undefined}>
+                    {a.agingCount}
                   </td>
                   <td className="num">{a.resolvedLast30Days}</td>
                 </tr>

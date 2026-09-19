@@ -20,7 +20,7 @@ beforeEach(async () => {
 afterAll(() => db.pool.end());
 
 describe('POST /api/tickets', () => {
-  it('files a ticket with a number, SLA deadline and audit entry', async () => {
+  it('files a ticket with a number, an age and an audit entry', async () => {
     const ticket = await createTicket(homeowner, { priority: 'high' });
 
     expect(ticket.ticketNumber).toMatch(/^TSV-\d{4}-\d{5}$/);
@@ -28,9 +28,8 @@ describe('POST /api/tickets', () => {
     expect(ticket.priority).toBe('high');
     expect(ticket.homeowner.id).toBe(homeowner.id);
     expect(ticket.assignee).toBeNull();
-    // High priority is a 24 hour SLA.
-    const hours = (new Date(ticket.slaDeadline) - new Date(ticket.createdAt)) / 3600000;
-    expect(hours).toBeCloseTo(24, 0);
+    // A ticket filed just now is zero hours old.
+    expect(ticket.ageHours).toBe(0);
 
     const activity = await request(app).get(`/api/tickets/${ticket.id}/activity`)
       .set('Authorization', homeowner.auth());
@@ -127,7 +126,7 @@ describe('GET /api/tickets', () => {
   });
 
   it('filters by status, priority and free text', async () => {
-    const a = await createTicket(homeowner, { title: 'Urgent burst pipe', priority: 'urgent' });
+    const a = await createTicket(homeowner, { title: 'Urgent burst pipe', priority: 'high' });
     await createTicket(homeowner, { title: 'Low priority squeaky door', priority: 'low' });
 
     await request(app).patch(`/api/tickets/${a.id}`)
@@ -165,13 +164,16 @@ describe('GET /api/tickets', () => {
     expect(mine.body.tickets[0].id).toBe(assigned.id);
   });
 
-  it('finds overdue tickets', async () => {
-    const ticket = await createTicket(homeowner);
-    await db.query("UPDATE tickets SET sla_deadline = now() - interval '1 hour' WHERE id = $1", [ticket.id]);
+  it('orders by age, oldest first', async () => {
+    const older = await createTicket(homeowner, { title: 'Filed a while ago' });
+    await db.query("UPDATE tickets SET created_at = now() - interval '9 days' WHERE id = $1", [older.id]);
+    await createTicket(homeowner, { title: 'Filed just now' });
 
-    const res = await request(app).get('/api/tickets?overdue=true').set('Authorization', staff.auth());
-    expect(res.body.tickets).toHaveLength(1);
-    expect(res.body.tickets[0].isOverdue).toBe(true);
+    const res = await request(app).get('/api/tickets?sort=created_at&order=asc')
+      .set('Authorization', staff.auth());
+
+    expect(res.body.tickets[0].id).toBe(older.id);
+    expect(res.body.tickets[0].ageHours).toBeGreaterThanOrEqual(24 * 9);
   });
 
   it('paginates', async () => {
@@ -213,10 +215,10 @@ describe('PATCH /api/tickets/:id', () => {
 
     const res = await request(app).patch(`/api/tickets/${ticket.id}`)
       .set('Authorization', staff.auth())
-      .send({ status: 'in_progress', priority: 'urgent' });
+      .send({ status: 'in_progress', priority: 'high' });
 
     expect(res.status).toBe(200);
-    expect(res.body.ticket).toMatchObject({ status: 'in_progress', priority: 'urgent' });
+    expect(res.body.ticket).toMatchObject({ status: 'in_progress', priority: 'high' });
     expect(res.body.changed).toEqual(expect.arrayContaining(['status', 'priority']));
     expect(res.body.ticket.firstResponseAt).not.toBeNull();
 
@@ -226,14 +228,23 @@ describe('PATCH /api/tickets/:id', () => {
     expect(fields).toEqual(expect.arrayContaining(['status', 'priority']));
   });
 
-  it('tightens the SLA deadline when priority is raised', async () => {
+  it('raises priority without touching when the ticket was filed', async () => {
     const ticket = await createTicket(homeowner, { priority: 'low' });
-    const before = new Date(ticket.slaDeadline);
+
+    const res = await request(app).patch(`/api/tickets/${ticket.id}`)
+      .set('Authorization', staff.auth()).send({ priority: 'high' });
+
+    expect(res.body.ticket.priority).toBe('high');
+    expect(res.body.ticket.createdAt).toBe(ticket.createdAt);
+  });
+
+  it('refuses a priority outside low, medium and high', async () => {
+    const ticket = await createTicket(homeowner);
 
     const res = await request(app).patch(`/api/tickets/${ticket.id}`)
       .set('Authorization', staff.auth()).send({ priority: 'urgent' });
 
-    expect(new Date(res.body.ticket.slaDeadline).getTime()).toBeLessThan(before.getTime());
+    expect(res.status).toBe(400);
   });
 
   it('refuses an illegal status transition', async () => {
@@ -272,7 +283,7 @@ describe('PATCH /api/tickets/:id', () => {
     const ticket = await createTicket(homeowner);
 
     const priority = await request(app).patch(`/api/tickets/${ticket.id}`)
-      .set('Authorization', homeowner.auth()).send({ priority: 'urgent' });
+      .set('Authorization', homeowner.auth()).send({ priority: 'high' });
     expect(priority.status).toBe(403);
 
     const status = await request(app).patch(`/api/tickets/${ticket.id}`)

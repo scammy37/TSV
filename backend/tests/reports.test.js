@@ -25,47 +25,47 @@ describe('GET /api/reports/summary', () => {
     const res = await request(app).get('/api/reports/summary').set('Authorization', manager.auth());
 
     expect(res.status).toBe(200);
-    expect(res.body.totals).toMatchObject({ total: 0, open: 0, overdue: 0, unassigned: 0 });
+    expect(res.body.totals).toMatchObject({ total: 0, open: 0, agingOpen: 0, unassigned: 0 });
     expect(res.body.totals.avgResolutionHours).toBeNull();
-    expect(res.body.totals.slaCompliance).toBeNull();
+    expect(res.body.totals.oldestOpenHours).toBeNull();
     expect(res.body.byStatus.open).toBe(0);
   });
 
-  it('counts open, unassigned and overdue tickets', async () => {
-    const a = await createTicket(homeowner, { title: 'Overdue burst pipe', priority: 'urgent' });
+  it('counts open, unassigned and long-open tickets', async () => {
+    const a = await createTicket(homeowner, { title: 'Long-running burst pipe', priority: 'high' });
     await createTicket(homeowner, { title: 'Ordinary squeaky hinge' });
 
-    await db.query("UPDATE tickets SET sla_deadline = now() - interval '2 hours' WHERE id = $1", [a.id]);
+    // Older than a week, which is what agingOpen counts.
+    await db.query("UPDATE tickets SET created_at = now() - interval '9 days' WHERE id = $1", [a.id]);
     await request(app).post(`/api/tickets/${a.id}/assign`)
       .set('Authorization', manager.auth()).send({ assignedTo: staff.id });
 
     const res = await request(app).get('/api/reports/summary').set('Authorization', manager.auth());
 
     expect(res.body.totals).toMatchObject({
-      total: 2, open: 2, unassigned: 1, overdue: 1, createdLast7Days: 2,
+      total: 2, open: 2, unassigned: 1, agingOpen: 1,
     });
+    expect(res.body.totals.oldestOpenHours).toBeGreaterThanOrEqual(24 * 9);
     expect(res.body.byStatus.open).toBe(2);
-    expect(res.body.byPriority.urgent).toBe(1);
+    expect(res.body.byPriority.high).toBe(1);
   });
 
-  it('reports resolution time and SLA compliance once tickets close', async () => {
-    const onTime = await createTicket(homeowner, { title: 'Resolved inside the SLA window' });
-    const late = await createTicket(homeowner, { title: 'Resolved outside the SLA window' });
+  it('reports resolution time once tickets close', async () => {
+    const first = await createTicket(homeowner, { title: 'Resolved quickly enough' });
+    const second = await createTicket(homeowner, { title: 'Resolved after a while' });
 
-    await request(app).patch(`/api/tickets/${onTime.id}`)
+    await request(app).patch(`/api/tickets/${first.id}`)
       .set('Authorization', staff.auth()).send({ status: 'resolved' });
-
-    // Force this one past its deadline before resolving, so one of each lands.
-    await db.query("UPDATE tickets SET sla_deadline = now() - interval '1 hour' WHERE id = $1", [late.id]);
-    await request(app).patch(`/api/tickets/${late.id}`)
+    await request(app).patch(`/api/tickets/${second.id}`)
       .set('Authorization', staff.auth()).send({ status: 'resolved' });
 
     const res = await request(app).get('/api/reports/summary').set('Authorization', manager.auth());
 
-    expect(res.body.totals.slaCompliance).toBe(50);
     expect(res.body.totals.avgResolutionHours).toEqual(expect.any(Number));
     expect(res.body.totals.resolvedLast7Days).toBe(2);
     expect(res.body.byStatus.resolved).toBe(2);
+    // Nothing is left open, so there is no oldest open ticket.
+    expect(res.body.totals.oldestOpenHours).toBeNull();
   });
 
   it('breaks work down by category and assignee', async () => {

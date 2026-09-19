@@ -1,11 +1,11 @@
-// Shared vocabulary for roles, ticket state and SLA policy. The frontend reads
-// the same lists from GET /api/meta so the two can never drift.
+// Shared vocabulary for roles and ticket state. The frontend reads the same
+// lists from GET /api/meta so the two can never drift.
 
 const ROLES = { HOMEOWNER: 'homeowner', STAFF: 'staff', MANAGEMENT: 'management' };
 
 const STAFF_ROLES = [ROLES.STAFF, ROLES.MANAGEMENT];
 
-const PRIORITIES = ['low', 'medium', 'high', 'urgent'];
+const PRIORITIES = ['low', 'medium', 'high'];
 
 const STATUSES = ['open', 'in_progress', 'on_hold', 'resolved', 'closed', 'cancelled'];
 
@@ -23,14 +23,10 @@ const STATUS_TRANSITIONS = {
   cancelled: ['open'],
 };
 
-// Hours a ticket has to be resolved, by priority.
-const SLA_HOURS = { urgent: 4, high: 24, medium: 72, low: 168 };
-
 const PRIORITY_LABELS = {
   low: 'Low',
   medium: 'Medium',
   high: 'High',
-  urgent: 'Urgent',
 };
 
 const STATUS_LABELS = {
@@ -49,7 +45,6 @@ module.exports = {
   STATUSES,
   TERMINAL_STATUSES,
   STATUS_TRANSITIONS,
-  SLA_HOURS,
   PRIORITY_LABELS,
   STATUS_LABELS,
 };

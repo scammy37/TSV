@@ -3,7 +3,7 @@ const express = require('express');
 const db = require('../db/connection');
 const asyncHandler = require('../utils/asyncHandler');
 const {
-  PRIORITIES, STATUSES, PRIORITY_LABELS, STATUS_LABELS, SLA_HOURS, STATUS_TRANSITIONS,
+  PRIORITIES, STATUSES, PRIORITY_LABELS, STATUS_LABELS, STATUS_TRANSITIONS,
 } = require('../constants');
 
 const router = express.Router();
@@ -21,7 +21,7 @@ router.get('/', asyncHandler(async (req, res) => {
   res.json({
     categories: rows,
     priorities: PRIORITIES.map((value) => ({
-      value, label: PRIORITY_LABELS[value], slaHours: SLA_HOURS[value],
+      value, label: PRIORITY_LABELS[value],
     })),
     statuses: STATUSES.map((value) => ({
       value, label: STATUS_LABELS[value], next: STATUS_TRANSITIONS[value] || [],

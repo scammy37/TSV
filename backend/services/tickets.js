@@ -20,12 +20,11 @@ const TICKET_SELECT = `
 
 // Ordering by priority needs severity order, not alphabetical.
 const PRIORITY_ORDER = `CASE t.priority
-  WHEN 'urgent' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 ELSE 1 END`;
+  WHEN 'high' THEN 3 WHEN 'medium' THEN 2 ELSE 1 END`;
 
 const SORT_COLUMNS = {
   created_at: 't.created_at',
   updated_at: 't.updated_at',
-  sla_deadline: 't.sla_deadline',
   status: 't.status',
   priority: PRIORITY_ORDER,
 };
@@ -134,10 +133,6 @@ const buildListQuery = (filters, user) => {
     where.push(`t.status NOT IN ('resolved', 'closed', 'cancelled')`);
   } else if (filters.open === false) {
     where.push(`t.status IN ('resolved', 'closed', 'cancelled')`);
-  }
-
-  if (filters.overdue) {
-    where.push(`t.sla_deadline < now() AND t.status NOT IN ('resolved', 'closed', 'cancelled')`);
   }
 
   if (filters.q) {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import { StatusBadge, PriorityBadge, OverdueBadge } from './Badges';
+import { StatusBadge, PriorityBadge, AgeBadge } from './Badges';
 import { formatRelative } from '../utils/format';
 
 export default function TicketRow({ ticket, labels, showHomeowner }) {
@@ -11,7 +11,7 @@ export default function TicketRow({ ticket, labels, showHomeowner }) {
         <span className="ticket-number">{ticket.ticketNumber}</span>
         <StatusBadge status={ticket.status} label={labels?.statuses?.[ticket.status]} />
         <PriorityBadge priority={ticket.priority} label={labels?.priorities?.[ticket.priority]} />
-        {ticket.isOverdue && <OverdueBadge when={ticket.slaDeadline} />}
+        <AgeBadge hours={ticket.ageHours} />
       </div>
 
       <div className="ticket-title">{ticket.title}</div>

@@ -74,8 +74,7 @@ const templates = {
       <p>Your service request has been logged and is waiting for review by the
          management team.</p>
       ${detailRows(ticket)}
-      ${ticket.sla_deadline ? `<p style="font-size:14px;color:#67707f">
-        Target resolution: ${new Date(ticket.sla_deadline).toLocaleString()}</p>` : ''}`, ticket),
+      `, ticket),
   }),
 
   ticket_created_internal: ({ ticket, actor }) => ({

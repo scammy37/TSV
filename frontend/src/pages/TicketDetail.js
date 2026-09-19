@@ -5,7 +5,7 @@ import { api, errorMessage } from '../api/client';
 import useMeta from '../hooks/useMeta';
 import Alert from '../components/Alert';
 import Spinner from '../components/Spinner';
-import { StatusBadge, PriorityBadge, OverdueBadge } from '../components/Badges';
+import { StatusBadge, PriorityBadge, AgeBadge, formatAge } from '../components/Badges';
 import { useAuth } from '../context/AuthContext';
 import { formatDateTime, formatRelative, humanize } from '../utils/format';
 
@@ -150,7 +150,7 @@ export default function TicketDetail() {
             <span className="ticket-number">{ticket.ticketNumber}</span>
             <StatusBadge status={ticket.status} label={meta?.statusLabels?.[ticket.status]} />
             <PriorityBadge priority={ticket.priority} label={meta?.priorityLabels?.[ticket.priority]} />
-            {ticket.isOverdue && <OverdueBadge when={ticket.slaDeadline} />}
+            <AgeBadge hours={ticket.ageHours} />
           </div>
           <h1 style={{ marginTop: 6 }}>{ticket.title}</h1>
           <p>
@@ -224,17 +224,20 @@ export default function TicketDetail() {
                     onChange={(e) => setDraft(e.target.value)} />
                 </div>
 
+                {isStaff && (
+                  <label className="checkbox" style={{ display: 'block', marginBottom: 12 }}>
+                    <input type="checkbox" checked={draftInternal}
+                      onChange={(e) => setDraftInternal(e.target.checked)} />
+                    Internal note &mdash; hidden from the homeowner
+                  </label>
+                )}
+
                 <div className="actions" style={{ alignItems: 'center' }}>
                   <button type="submit" disabled={busy || !draft.trim()}>
-                    {busy ? 'Posting...' : 'Post message'}
+                    {/* The label names what the click will do, so the mode is
+                        impossible to miss at the moment of posting. */}
+                    {busy ? 'Posting...' : (draftInternal ? 'Post internal note' : 'Post message')}
                   </button>
-                  {isStaff && (
-                    <label className="checkbox">
-                      <input type="checkbox" checked={draftInternal}
-                        onChange={(e) => setDraftInternal(e.target.checked)} />
-                      Internal note (hidden from the homeowner)
-                    </label>
-                  )}
                 </div>
               </form>
             ) : (
@@ -265,10 +268,8 @@ export default function TicketDetail() {
                 <span className="meta-value">{ticket.assignee?.fullName || 'Nobody yet'}</span>
               </div>
               <div className="meta-item">
-                <span className="meta-label">Target resolution</span>
-                <span className="meta-value" style={ticket.isOverdue ? { color: 'var(--danger)' } : undefined}>
-                  {formatDateTime(ticket.slaDeadline)}
-                </span>
+                <span className="meta-label">Open for</span>
+                <span className="meta-value">{formatAge(ticket.ageHours)}</span>
               </div>
               <div className="meta-item">
                 <span className="meta-label">Submitted by</span>
@@ -324,7 +325,7 @@ export default function TicketDetail() {
                     'Priority updated',
                   )}>
                   {meta?.priorities.map((p) => (
-                    <option key={p.value} value={p.value}>{p.label} ({p.slaHours}h SLA)</option>
+                    <option key={p.value} value={p.value}>{p.label}</option>
                   ))}
                 </select>
               </div>

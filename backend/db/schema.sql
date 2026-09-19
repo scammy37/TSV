@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS tickets (
   assigned_to      INTEGER REFERENCES users(id) ON DELETE SET NULL,
   category         VARCHAR(50) NOT NULL REFERENCES categories(slug),
   priority         VARCHAR(20) NOT NULL DEFAULT 'medium'
-                     CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+                     CHECK (priority IN ('low', 'medium', 'high')),
   status           VARCHAR(20) NOT NULL DEFAULT 'open'
                      CHECK (status IN ('open', 'in_progress', 'on_hold',
                                        'resolved', 'closed', 'cancelled')),
@@ -83,7 +83,6 @@ CREATE TABLE IF NOT EXISTS tickets (
   description      TEXT NOT NULL,
   location_details TEXT,
   unit_number      VARCHAR(50),
-  sla_deadline     TIMESTAMPTZ,
   first_response_at TIMESTAMPTZ,
   resolved_at      TIMESTAMPTZ,
   closed_at        TIMESTAMPTZ,
@@ -98,8 +97,8 @@ CREATE INDEX IF NOT EXISTS idx_tickets_status     ON tickets (status);
 CREATE INDEX IF NOT EXISTS idx_tickets_priority   ON tickets (priority);
 CREATE INDEX IF NOT EXISTS idx_tickets_category   ON tickets (category);
 CREATE INDEX IF NOT EXISTS idx_tickets_created_at ON tickets (created_at DESC);
--- Open tickets past their SLA are the hot query on the management dashboard.
-CREATE INDEX IF NOT EXISTS idx_tickets_sla_open ON tickets (sla_deadline)
+-- Open tickets oldest-first is the hot query on the management dashboard.
+CREATE INDEX IF NOT EXISTS idx_tickets_open_age ON tickets (created_at)
   WHERE status NOT IN ('resolved', 'closed', 'cancelled');
 
 DROP TRIGGER IF EXISTS trg_tickets_updated_at ON tickets;
@@ -175,3 +174,21 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 
 CREATE INDEX IF NOT EXISTS idx_reset_tokens_user ON password_reset_tokens (user_id);
 CREATE INDEX IF NOT EXISTS idx_reset_tokens_expiry ON password_reset_tokens (expires_at);
+
+-- -----------------------------------------------------------------------------
+-- In-place changes for databases created before SLA deadlines were removed and
+-- the priority list was cut to three. CREATE ... IF NOT EXISTS cannot alter an
+-- existing table, so these run every time and are written to be no-ops once
+-- they have been applied.
+-- -----------------------------------------------------------------------------
+
+-- Remap tickets filed under the old fourth priority before the constraint that
+-- forbids it is installed, or the constraint would be rejected.
+UPDATE tickets SET priority = 'high' WHERE priority = 'urgent';
+
+ALTER TABLE tickets DROP CONSTRAINT IF EXISTS tickets_priority_check;
+ALTER TABLE tickets ADD CONSTRAINT tickets_priority_check
+  CHECK (priority IN ('low', 'medium', 'high'));
+
+DROP INDEX IF EXISTS idx_tickets_sla_open;
+ALTER TABLE tickets DROP COLUMN IF EXISTS sla_deadline;

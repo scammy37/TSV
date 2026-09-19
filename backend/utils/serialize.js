@@ -1,5 +1,3 @@
-const { isOverdue } = require('./sla');
-
 const publicUser = (row) => {
   if (!row) return null;
   return {
@@ -47,8 +45,9 @@ const ticket = (row) => {
     unitNumber: row.unit_number ?? null,
     homeowner: nestedUser(row, 'homeowner'),
     assignee: nestedUser(row, 'assignee'),
-    slaDeadline: row.sla_deadline ?? null,
-    isOverdue: isOverdue(row),
+    ageHours: row.created_at
+      ? Math.max(0, Math.floor((Date.now() - new Date(row.created_at).getTime()) / 3600000))
+      : null,
     firstResponseAt: row.first_response_at ?? null,
     resolvedAt: row.resolved_at ?? null,
     closedAt: row.closed_at ?? null,

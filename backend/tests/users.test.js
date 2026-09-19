@@ -117,7 +117,7 @@ describe('GET /api/meta', () => {
     expect(res.status).toBe(200);
     expect(res.body.categories.map((c) => c.slug)).toContain('plumbing');
     expect(res.body.priorities).toEqual(expect.arrayContaining([
-      expect.objectContaining({ value: 'urgent', slaHours: 4 }),
+      expect.objectContaining({ value: 'high', label: 'High' }),
     ]));
     expect(res.body.statuses.find((s) => s.value === 'open').next).toContain('in_progress');
   });
