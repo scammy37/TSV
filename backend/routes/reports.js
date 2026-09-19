@@ -3,7 +3,7 @@ const express = require('express');
 const db = require('../db/connection');
 const { authenticate, authorize } = require('../middleware/auth');
 const asyncHandler = require('../utils/asyncHandler');
-const { ROLES, STATUSES, PRIORITIES } = require('../constants');
+const { ROLES, STATUSES, PRIORITIES, AGING_DAYS } = require('../constants');
 
 const router = express.Router();
 
@@ -42,7 +42,7 @@ router.get('/summary', asyncHandler(async (req, res) => {
         COUNT(*) FILTER (WHERE status NOT IN ('resolved','closed','cancelled'))::int AS open,
         COUNT(*) FILTER (WHERE assigned_to IS NULL
                            AND status NOT IN ('resolved','closed','cancelled'))::int AS unassigned,
-        COUNT(*) FILTER (WHERE created_at < now() - interval '7 days'
+        COUNT(*) FILTER (WHERE created_at < now() - make_interval(days => ${AGING_DAYS})
                            AND status NOT IN ('resolved','closed','cancelled'))::int AS aging_open,
         COUNT(*) FILTER (WHERE created_at > now() - interval '7 days')::int AS created_last_7_days,
         COUNT(*) FILTER (WHERE resolved_at > now() - interval '7 days')::int AS resolved_last_7_days,
@@ -58,7 +58,7 @@ router.get('/summary', asyncHandler(async (req, res) => {
       SELECT u.id, u.first_name, u.last_name,
              COUNT(t.id) FILTER (WHERE t.status NOT IN ('resolved','closed','cancelled'))::int AS open_count,
              COUNT(t.id) FILTER (WHERE t.resolved_at > now() - interval '30 days')::int AS resolved_30d,
-             COUNT(t.id) FILTER (WHERE t.created_at < now() - interval '7 days'
+             COUNT(t.id) FILTER (WHERE t.created_at < now() - make_interval(days => ${AGING_DAYS})
                                    AND t.status NOT IN ('resolved','closed','cancelled'))::int AS aging_count
       FROM users u
       LEFT JOIN tickets t ON t.assigned_to = u.id

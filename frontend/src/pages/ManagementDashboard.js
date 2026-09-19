@@ -183,7 +183,7 @@ export default function ManagementDashboard() {
         <>
           <div className="ticket-list">
             {data.tickets.map((ticket) => (
-              <TicketRow key={ticket.id} ticket={ticket} labels={labels} showHomeowner />
+              <TicketRow key={ticket.id} ticket={ticket} labels={labels} agingDays={meta?.agingDays} showHomeowner />
             ))}
           </div>
 

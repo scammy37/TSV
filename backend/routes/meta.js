@@ -3,7 +3,7 @@ const express = require('express');
 const db = require('../db/connection');
 const asyncHandler = require('../utils/asyncHandler');
 const {
-  PRIORITIES, STATUSES, PRIORITY_LABELS, STATUS_LABELS, STATUS_TRANSITIONS,
+  PRIORITIES, STATUSES, PRIORITY_LABELS, STATUS_LABELS, STATUS_TRANSITIONS, AGING_DAYS,
 } = require('../constants');
 
 const router = express.Router();
@@ -26,6 +26,9 @@ router.get('/', asyncHandler(async (req, res) => {
     statuses: STATUSES.map((value) => ({
       value, label: STATUS_LABELS[value], next: STATUS_TRANSITIONS[value] || [],
     })),
+    // The one "this has sat too long" threshold, so the badge on a ticket and
+    // the count on the reports page always mean the same thing.
+    agingDays: AGING_DAYS,
   });
 }));
 

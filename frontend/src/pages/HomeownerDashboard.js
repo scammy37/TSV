@@ -91,7 +91,7 @@ export default function HomeownerDashboard() {
       ) : (
         <div className="ticket-list">
           {data.tickets.map((ticket) => (
-            <TicketRow key={ticket.id} ticket={ticket} labels={labels} />
+            <TicketRow key={ticket.id} ticket={ticket} labels={labels} agingDays={meta?.agingDays} />
           ))}
         </div>
       )}

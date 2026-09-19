@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { api, errorMessage } from '../api/client';
 import Alert from '../components/Alert';
 import Spinner from '../components/Spinner';
+import useMeta from '../hooks/useMeta';
 import { formatHours } from '../utils/format';
 
 // A labelled proportional bar -- enough to read a distribution at a glance
@@ -23,6 +24,8 @@ function BarRow({ label, count, max, color }) {
 }
 
 export default function Reports() {
+  const { meta } = useMeta();
+  const agingDays = meta?.agingDays ?? 7;
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -59,7 +62,7 @@ export default function Reports() {
           <div className="stat-sub">{totals.total} all time</div>
         </div>
         <div className={`stat${totals.agingOpen > 0 ? ' alarm' : ''}`}>
-          <div className="stat-label">Open over a week</div>
+          <div className="stat-label">{`Open over ${agingDays} days`}</div>
           <div className="stat-value">{totals.agingOpen}</div>
           <div className="stat-sub">still unresolved</div>
         </div>
@@ -124,7 +127,7 @@ export default function Reports() {
               <tr>
                 <th>Staff member</th>
                 <th className="num">Open</th>
-                <th className="num">Over a week</th>
+                <th className="num">{`Over ${agingDays}d`}</th>
                 <th className="num">Resolved (30d)</th>
               </tr>
             </thead>

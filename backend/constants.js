@@ -23,6 +23,12 @@ const STATUS_TRANSITIONS = {
   cancelled: ['open'],
 };
 
+// How long an open ticket may sit before management should be looking at it.
+// Without SLA deadlines this is the only "needs attention" threshold there is,
+// so it lives here and is published through GET /api/meta rather than being
+// written into each query and each component.
+const AGING_DAYS = 7;
+
 const PRIORITY_LABELS = {
   low: 'Low',
   medium: 'Medium',
@@ -45,6 +51,7 @@ module.exports = {
   STATUSES,
   TERMINAL_STATUSES,
   STATUS_TRANSITIONS,
+  AGING_DAYS,
   PRIORITY_LABELS,
   STATUS_LABELS,
 };

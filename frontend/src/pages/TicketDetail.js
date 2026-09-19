@@ -150,7 +150,7 @@ export default function TicketDetail() {
             <span className="ticket-number">{ticket.ticketNumber}</span>
             <StatusBadge status={ticket.status} label={meta?.statusLabels?.[ticket.status]} />
             <PriorityBadge priority={ticket.priority} label={meta?.priorityLabels?.[ticket.priority]} />
-            <AgeBadge hours={ticket.ageHours} />
+            <AgeBadge hours={ticket.ageHours} agingDays={meta?.agingDays} />
           </div>
           <h1 style={{ marginTop: 6 }}>{ticket.title}</h1>
           <p>

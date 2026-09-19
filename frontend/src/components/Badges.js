@@ -27,9 +27,11 @@ export function formatAge(hours) {
   return `${Math.floor(days / 7)}w old`;
 }
 
-export function AgeBadge({ hours }) {
+// agingDays comes from GET /api/meta; the default is only for the moment
+// before meta has loaded.
+export function AgeBadge({ hours, agingDays = 7 }) {
   if (hours === null || hours === undefined) return null;
-  const aging = hours >= 24 * 7;
+  const aging = hours >= 24 * agingDays;
   return (
     <span className={`badge${aging ? ' badge-overdue' : ''}`} style={aging ? undefined : tokenStyle('low')}>
       {formatAge(hours)}
