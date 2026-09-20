@@ -16,7 +16,7 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false);
 
   if (authLoading) return <Spinner center />;
-  if (user) return <Navigate to={location.state?.from?.pathname || '/'} replace />;
+  if (user) return <Navigate to={location.state?.from?.pathname || '/dashboard'} replace />;
 
   const update = (field) => (event) => setForm({ ...form, [field]: event.target.value });
 
@@ -26,7 +26,7 @@ export default function Login() {
     setSubmitting(true);
     try {
       await login(form);
-      navigate(location.state?.from?.pathname || '/', { replace: true });
+      navigate(location.state?.from?.pathname || '/dashboard', { replace: true });
     } catch (err) {
       setError(errorMessage(err, 'Could not sign in'));
     } finally {

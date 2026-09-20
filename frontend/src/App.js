@@ -16,6 +16,7 @@ import Reports from './pages/Reports';
 import Users from './pages/Users';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
+import Home from './pages/Home';
 
 const STAFF = ['staff', 'management'];
 
@@ -36,8 +37,12 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
-          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/tickets" element={<Navigate to="/" replace />} />
+          {/* The front door is public: a resident who has never signed in still
+              needs to find out who the association is and how to file a request. */}
+          <Route path="/" element={<Home />} />
+
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/tickets" element={<Navigate to="/dashboard" replace />} />
           <Route path="/tickets/new" element={<ProtectedRoute><NewTicket /></ProtectedRoute>} />
           <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetail /></ProtectedRoute>} />
 

@@ -26,7 +26,7 @@ export default function Register() {
   const [submitting, setSubmitting] = useState(false);
 
   if (authLoading) return <Spinner center />;
-  if (user) return <Navigate to="/" replace />;
+  if (user) return <Navigate to="/dashboard" replace />;
 
   const update = (field) => (event) => setForm({ ...form, [field]: event.target.value });
   const isStaffSignup = form.role !== 'homeowner';
@@ -42,7 +42,7 @@ export default function Register() {
       else delete payload.unitNumber;
 
       await register(payload);
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(errorMessage(err, 'Could not create the account'));
     } finally {

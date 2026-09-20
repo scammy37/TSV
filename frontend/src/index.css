@@ -448,3 +448,118 @@ th.num { text-align: right; }
   .usermenu-name, .usermenu-role { display: none; }
   .bar-label { width: 96px; }
 }
+
+/* =============================================================================
+   Public homepage. The only page a resident sees before they have an account,
+   so it carries the association's own identity rather than the app chrome.
+   Built from the same tokens above, so it follows the light/dark palette.
+   ========================================================================== */
+.home { min-height: 100%; display: flex; flex-direction: column; background: var(--bg); }
+
+.home-bar {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.home-bar-inner {
+  max-width: 1080px; margin: 0 auto; padding: 12px 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.home-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
+.home-brand-mark {
+  background: var(--accent); color: #fff; font-weight: 800; font-size: 13px;
+  letter-spacing: .04em; padding: 5px 8px; border-radius: var(--radius-sm); flex: none;
+}
+.home-brand-name { font-weight: 700; letter-spacing: -.01em; }
+.home-nav { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.home-link { color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 14.5px; }
+.home-link:hover { color: var(--accent); }
+
+.home-btn {
+  display: inline-block; text-decoration: none; font-weight: 650; font-size: 14.5px;
+  padding: 9px 16px; border-radius: var(--radius-sm); border: 1px solid transparent;
+  transition: background .12s, border-color .12s;
+}
+.home-btn-primary { background: var(--accent); color: #fff; }
+.home-btn-primary:hover { background: var(--accent-hover); }
+.home-btn-quiet { background: var(--surface); color: var(--text); border-color: var(--border-strong); }
+.home-btn-quiet:hover { border-color: var(--accent); color: var(--accent); }
+.home-btn-lg { padding: 12px 22px; font-size: 15.5px; }
+
+/* The photograph is set inline from public/hero.jpg. With no file there the
+   solid colour shows instead, so the hero is never a broken image. */
+.home-hero {
+  background-color: #22324a;
+  background-size: cover; background-position: center;
+  min-height: 300px; display: flex; align-items: flex-end;
+}
+.home-hero-overlay {
+  width: 100%;
+  background: linear-gradient(180deg, rgba(10, 18, 32, 0), rgba(10, 18, 32, .78));
+}
+.home-hero-inner { max-width: 1080px; margin: 0 auto; padding: 56px 20px 32px; }
+.home-hero-eyebrow {
+  margin: 0 0 6px; color: rgba(255,255,255,.85); font-size: 12.5px;
+  font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+}
+.home-hero-title {
+  margin: 0; color: #fff; font-size: clamp(26px, 4.6vw, 42px);
+  line-height: 1.12; letter-spacing: -.02em; text-wrap: balance;
+}
+
+.home-main { flex: 1; }
+.home-grid {
+  max-width: 1080px; margin: 0 auto; padding: 36px 20px 48px;
+  display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); gap: 28px; align-items: start;
+}
+@media (max-width: 800px) { .home-grid { grid-template-columns: 1fr; } }
+
+.home-welcome h2 { margin: 0 0 14px; font-size: clamp(21px, 3vw, 28px); letter-spacing: -.015em; }
+.home-welcome p { margin: 0 0 14px; color: var(--text-muted); line-height: 1.65; max-width: 62ch; }
+
+.home-cta {
+  margin-top: 26px; padding: 22px; border-radius: var(--radius);
+  background: var(--accent-soft); border: 1px solid var(--border);
+}
+.home-cta h3 { margin: 0 0 8px; font-size: 18px; letter-spacing: -.01em; }
+.home-cta p { margin: 0 0 16px; }
+.home-cta-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.home-aside { display: flex; flex-direction: column; gap: 16px; }
+.home-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow);
+}
+.home-card h3 {
+  margin: 0 0 12px; font-size: 12px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--text-faint);
+}
+.home-card p { margin: 0 0 10px; color: var(--text-muted); line-height: 1.6; font-size: 14.6px; }
+.home-card p:last-child { margin-bottom: 0; }
+.home-card-strong { color: var(--text) !important; font-weight: 650; }
+.home-card a { color: var(--accent); text-decoration: none; overflow-wrap: anywhere; }
+.home-card a:hover { text-decoration: underline; }
+
+.home-steps { margin: 0; padding-left: 20px; color: var(--text-muted); font-size: 14.6px; line-height: 1.6; }
+.home-steps li { margin-bottom: 8px; }
+.home-steps li:last-child { margin-bottom: 0; }
+
+.home-footer { border-top: 1px solid var(--border); background: var(--surface); }
+.home-footer-inner {
+  max-width: 1080px; margin: 0 auto; padding: 20px;
+  display: flex; gap: 12px 20px; flex-wrap: wrap; justify-content: space-between;
+  color: var(--text-faint); font-size: 14px;
+}
+.home-footer a { color: var(--text-muted); text-decoration: none; }
+.home-footer a:hover { color: var(--accent); }
+
+@media (max-width: 460px) {
+  /* Keep the bar to one line: the wordmark shortens rather than wrapping under
+     the actions, which is what pushed "Sign in" onto its own row. */
+  .home-bar-inner { padding: 10px 16px; gap: 10px; }
+  .home-brand-name { font-size: 14px; line-height: 1.2; }
+  .home-nav { gap: 10px; flex-wrap: nowrap; }
+  .home-link { font-size: 14px; white-space: nowrap; }
+  .home-btn { padding: 8px 12px; font-size: 13.5px; white-space: nowrap; }
+  .home-hero { min-height: 220px; }
+  .home-hero-inner { padding: 40px 16px 24px; }
+}

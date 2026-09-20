@@ -133,7 +133,7 @@ export default function TicketDetail() {
     return (
       <div className="card">
         <Alert>{error || 'Ticket not found'}</Alert>
-        <Link to="/">Back to the list</Link>
+        <Link to="/dashboard">Back to the list</Link>
       </div>
     );
   }
@@ -158,7 +158,7 @@ export default function TicketDetail() {
             {ticket.unitNumber ? ` · Unit ${ticket.unitNumber}` : ''}
           </p>
         </div>
-        <Link to="/"><button type="button" className="secondary">Back to list</button></Link>
+        <Link to="/dashboard"><button type="button" className="secondary">Back to list</button></Link>
       </div>
 
       <Alert onDismiss={() => setError('')}>{error}</Alert>

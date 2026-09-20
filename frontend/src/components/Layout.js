@@ -16,12 +16,12 @@ export default function Layout({ children }) {
     <div className="app">
       <header className="topbar">
         <div className="topbar-inner">
-          <Link to="/" className="brand">
+          <Link to="/dashboard" className="brand">
             <span className="brand-mark">TSV</span> Property Services
           </Link>
 
           <nav className="nav">
-            <NavLink to="/" end className="nav-link">
+            <NavLink to="/dashboard" end className="nav-link">
               {isStaff ? 'Queue' : 'My Requests'}
             </NavLink>
             {!isStaff && <NavLink to="/tickets/new" className="nav-link">New Request</NavLink>}
