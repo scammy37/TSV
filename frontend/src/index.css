@@ -465,10 +465,7 @@ th.num { text-align: right; }
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
 .home-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
-.home-brand-mark {
-  background: var(--accent); color: #fff; font-weight: 800; font-size: 13px;
-  letter-spacing: .04em; padding: 5px 8px; border-radius: var(--radius-sm); flex: none;
-}
+.home-brand svg { flex: none; display: block; }
 .home-brand-name { font-weight: 700; letter-spacing: -.01em; }
 .home-nav { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .home-link { color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 14.5px; }
@@ -581,3 +578,8 @@ th.num { text-align: right; }
 .home-subnav-link:hover { color: var(--accent); border-bottom-color: var(--accent); }
 .home-subnav-out { font-size: 11px; opacity: .7; }
 @media (max-width: 460px) { .home-subnav-inner { padding: 0 10px; } }
+
+/* The signed-in header carries the same mark as the front door. */
+.brand { display: inline-flex; align-items: center; gap: 9px; }
+.brand svg { flex: none; display: block; }
+.brand-text { font-weight: 700; letter-spacing: -.01em; }

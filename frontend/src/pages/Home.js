@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
+import Logo from '../components/Logo';
 
 /**
  * The association's existing resident portal, run by Taylor Management on
@@ -38,7 +39,7 @@ export default function Home() {
       <header className="home-bar">
         <div className="home-bar-inner">
           <Link to="/" className="home-brand">
-            <span className="home-brand-mark">TSV</span>
+            <Logo size={38} />
             <span className="home-brand-name">Townsquare Village HOA</span>
           </Link>
 

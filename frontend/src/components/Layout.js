@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
+import Logo from './Logo';
 
 export default function Layout({ children }) {
   const { user, isStaff, isManagement, logout } = useAuth();
@@ -17,7 +18,8 @@ export default function Layout({ children }) {
       <header className="topbar">
         <div className="topbar-inner">
           <Link to="/dashboard" className="brand">
-            <span className="brand-mark">TSV</span> Property Services
+            <Logo size={30} />
+            <span className="brand-text">Townsquare Village</span>
           </Link>
 
           <nav className="nav">
