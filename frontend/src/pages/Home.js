@@ -84,10 +84,11 @@ export default function Home() {
             </p>
 
             <div className="home-cta">
-              <h3>Something need fixing?</h3>
+              <h3>Report an issue or violation to management</h3>
               <p>
-                Report a maintenance issue and follow it through to resolution. You will see
-                its status, who is handling it and every update along the way.
+                Report a maintenance problem or a rules violation and follow it through to
+                resolution. You will see its status, who is handling it and every update
+                along the way.
               </p>
               {user ? (
                 <Link to="/tickets/new" className="home-btn home-btn-primary home-btn-lg">
