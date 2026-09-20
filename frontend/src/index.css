@@ -563,3 +563,21 @@ th.num { text-align: right; }
   .home-hero { min-height: 220px; }
   .home-hero-inner { padding: 40px 16px 24px; }
 }
+
+/* Secondary nav to the association's existing portal. It scrolls sideways on a
+   phone rather than wrapping, so the bar stays one line at any width. */
+.home-subnav { background: var(--surface-alt); border-bottom: 1px solid var(--border); }
+.home-subnav-inner {
+  max-width: 1080px; margin: 0 auto; padding: 0 20px;
+  display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.home-subnav-inner::-webkit-scrollbar { display: none; }
+.home-subnav-link {
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  padding: 11px 12px; text-decoration: none; color: var(--text-muted);
+  font-size: 14.2px; font-weight: 600; border-bottom: 2px solid transparent;
+}
+.home-subnav-link:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.home-subnav-out { font-size: 11px; opacity: .7; }
+@media (max-width: 460px) { .home-subnav-inner { padding: 0 10px; } }

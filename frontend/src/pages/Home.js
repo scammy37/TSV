@@ -4,6 +4,24 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 /**
+ * The association's existing resident portal, run by Taylor Management on
+ * Enumerate Engage. Documents, payments, the calendar and the directory all
+ * still live there and are maintained there -- these links hand residents
+ * straight to them rather than this site keeping a second, staler copy.
+ *
+ * Only paths confirmed from the portal itself are listed. Adding a guessed one
+ * would give residents a dead link, which is worse than a missing one.
+ */
+const PORTAL = 'https://engage.goenumerate.com/s/townsquarevillage';
+
+const PORTAL_LINKS = [
+  { label: 'News & events', href: `${PORTAL}/communityfeed.php` },
+  { label: 'Documents & payments', href: `${PORTAL}/myhoaresources.php` },
+  { label: 'Amenities', href: `${PORTAL}/publichoa.php` },
+  { label: 'Resident portal', href: `${PORTAL}/home.php` },
+];
+
+/**
  * The public front door. Everything else in the app is behind a login, so this
  * is the only page a resident sees before they have an account -- it has to say
  * who the association is and give them one obvious thing to do.
@@ -40,6 +58,23 @@ export default function Home() {
           </nav>
         </div>
       </header>
+
+      <nav className="home-subnav" aria-label="Association resources">
+        <div className="home-subnav-inner">
+          {PORTAL_LINKS.map((link) => (
+            <a
+              key={link.href}
+              className="home-subnav-link"
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {link.label}
+              <span className="home-subnav-out" aria-hidden="true">&#8599;</span>
+            </a>
+          ))}
+        </div>
+      </nav>
 
       <div
         className="home-hero"
@@ -104,6 +139,20 @@ export default function Home() {
               <p>
                 <a href="mailto:office@townsquarevillagenj.com">
                   office@townsquarevillagenj.com
+                </a>
+              </p>
+            </div>
+
+            <div className="home-card">
+              <h3>Everything else</h3>
+              <p>
+                Documents, meeting minutes, the calendar, the resident directory and
+                payments are on the association&rsquo;s resident portal, managed by Taylor
+                Management.
+              </p>
+              <p>
+                <a href={`${PORTAL}/home.php`} target="_blank" rel="noopener noreferrer">
+                  Open the resident portal &#8599;
                 </a>
               </p>
             </div>
