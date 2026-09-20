@@ -461,20 +461,31 @@ th.num { text-align: right; }
   background: var(--surface); border-bottom: 1px solid var(--border);
 }
 .home-bar-inner {
-  max-width: 1080px; margin: 0 auto; padding: 12px 20px;
+  max-width: 1080px; margin: 0 auto; padding: 0 20px;
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
-.home-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
-.home-brand svg { flex: none; display: block; }
-.home-brand-name { font-weight: 700; letter-spacing: -.01em; }
-.home-nav { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.home-link { color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 14.5px; }
+/* The link row scrolls sideways when it runs out of room, so the bar stays one
+   line and the account action never wraps beneath it. */
+.home-links {
+  display: flex; gap: 2px; overflow-x: auto; min-width: 0;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.home-links::-webkit-scrollbar { display: none; }
+.home-link-out {
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  padding: 15px 12px; text-decoration: none; color: var(--text-muted);
+  font-size: 14.2px; font-weight: 600; border-bottom: 2px solid transparent;
+}
+.home-link-out:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.home-out { font-size: 11px; opacity: .7; }
+.home-actions { display: flex; align-items: center; gap: 12px; flex: none; }
+.home-link { color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 14.5px; white-space: nowrap; }
 .home-link:hover { color: var(--accent); }
 
 .home-btn {
   display: inline-block; text-decoration: none; font-weight: 650; font-size: 14.5px;
   padding: 9px 16px; border-radius: var(--radius-sm); border: 1px solid transparent;
-  transition: background .12s, border-color .12s;
+  transition: background .12s, border-color .12s; white-space: nowrap;
 }
 .home-btn-primary { background: var(--accent); color: #fff; }
 .home-btn-primary:hover { background: var(--accent-hover); }
@@ -482,24 +493,15 @@ th.num { text-align: right; }
 .home-btn-quiet:hover { border-color: var(--accent); color: var(--accent); }
 .home-btn-lg { padding: 12px 22px; font-size: 15.5px; }
 
-/* The photograph is set inline from public/hero.jpg. With no file there the
-   solid colour shows instead, so the hero is never a broken image. */
-.home-hero { background: #18212f; }
-/* The banner keeps its own proportions and caps its height, so it is never
-   stretched across an arbitrarily wide viewport. */
-.hero-banner { display: block; width: 100%; max-height: 260px; }
-.home-hero-overlay {
-  width: 100%;
-  background: linear-gradient(180deg, rgba(10, 18, 32, 0), rgba(10, 18, 32, .78));
-}
-.home-hero-inner { max-width: 1080px; margin: 0 auto; padding: 56px 20px 32px; }
-.home-hero-eyebrow {
-  margin: 0 0 6px; color: rgba(255,255,255,.85); font-size: 12.5px;
-  font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-}
-.home-hero-title {
-  margin: 0; color: #fff; font-size: clamp(26px, 4.6vw, 42px);
-  line-height: 1.12; letter-spacing: -.02em; text-wrap: balance;
+/* The banner fills the band edge to edge and crops its outer planting rather
+   than shrinking the sign. */
+.home-hero { background: #222c3d; line-height: 0; }
+.hero-banner {
+  display: block; width: 100%;
+  /* The band is shallower on a narrow screen on purpose. Cropping is driven by
+     the ratio of width to height, so a tall band on a phone would slice the
+     sign mid-word; a shallow one keeps both piers in frame. */
+  height: clamp(104px, 19vw, 280px);
 }
 
 .home-main { flex: 1; }
@@ -580,3 +582,15 @@ th.num { text-align: right; }
 .brand { display: inline-flex; align-items: center; gap: 9px; }
 .brand svg { flex: none; display: block; }
 .brand-text { font-weight: 700; letter-spacing: -.01em; }
+
+/* Resources read as a list of places to go, not a paragraph about them. */
+.home-reslist { list-style: none; margin: 0 0 12px; padding: 0; }
+.home-reslist li { border-bottom: 1px solid var(--border); }
+.home-reslist li:last-child { border-bottom: 0; }
+.home-reslist a {
+  display: block; padding: 9px 0; color: var(--text); text-decoration: none;
+  font-size: 14.6px; font-weight: 600;
+}
+.home-reslist a:hover { color: var(--accent); }
+.home-reslist a::after { content: ' \2197'; font-size: 11px; opacity: .55; font-weight: 400; }
+.home-reslist-note { font-size: 13px !important; color: var(--text-faint) !important; margin: 0 !important; }

@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
-import Logo from '../components/Logo';
 import HeroBanner from '../components/HeroBanner';
 
 /**
@@ -37,45 +36,34 @@ export default function Home() {
   return (
     <div className="home">
       <header className="home-bar">
-        <div className="home-bar-inner">
-          <Link to="/" className="home-brand">
-            <Logo size={38} />
-            <span className="home-brand-name">Townsquare Village HOA</span>
-          </Link>
+        <nav className="home-bar-inner" aria-label="Main">
+          <div className="home-links">
+            {PORTAL_LINKS.map((link) => (
+              <a
+                key={link.href}
+                className="home-link-out"
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {link.label}
+                <span className="home-out" aria-hidden="true">&#8599;</span>
+              </a>
+            ))}
+          </div>
 
-          <nav className="home-nav">
+          <div className="home-actions">
             {user ? (
-              <Link to="/dashboard" className="home-btn home-btn-primary">
-                My requests
-              </Link>
+              <Link to="/dashboard" className="home-btn home-btn-primary">My requests</Link>
             ) : (
               <>
                 <Link to="/login" className="home-link">Sign in</Link>
-                <Link to="/register" className="home-btn home-btn-primary">
-                  Submit a request
-                </Link>
+                <Link to="/register" className="home-btn home-btn-primary">Submit a request</Link>
               </>
             )}
-          </nav>
-        </div>
+          </div>
+        </nav>
       </header>
-
-      <nav className="home-subnav" aria-label="Association resources">
-        <div className="home-subnav-inner">
-          {PORTAL_LINKS.map((link) => (
-            <a
-              key={link.href}
-              className="home-subnav-link"
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {link.label}
-              <span className="home-subnav-out" aria-hidden="true">&#8599;</span>
-            </a>
-          ))}
-        </div>
-      </nav>
 
       <div className="home-hero">
         <HeroBanner />
@@ -135,16 +123,36 @@ export default function Home() {
             </div>
 
             <div className="home-card">
-              <h3>Everything else</h3>
-              <p>
-                Documents, meeting minutes, the calendar, the resident directory and
-                payments are on the association&rsquo;s resident portal, managed by Taylor
-                Management.
-              </p>
-              <p>
-                <a href={`${PORTAL}/home.php`} target="_blank" rel="noopener noreferrer">
-                  Open the resident portal &#8599;
-                </a>
+              <h3>Association resources</h3>
+              <ul className="home-reslist">
+                <li>
+                  <a href={`${PORTAL}/myhoaresources.php`} target="_blank" rel="noopener noreferrer">
+                    Documents &amp; governing rules
+                  </a>
+                </li>
+                <li>
+                  <a href={`${PORTAL}/myhoaresources.php`} target="_blank" rel="noopener noreferrer">
+                    Make a payment
+                  </a>
+                </li>
+                <li>
+                  <a href={`${PORTAL}/communityfeed.php`} target="_blank" rel="noopener noreferrer">
+                    Board meetings &amp; news
+                  </a>
+                </li>
+                <li>
+                  <a href={`${PORTAL}/communityfeed.php`} target="_blank" rel="noopener noreferrer">
+                    Calendar &amp; committees
+                  </a>
+                </li>
+                <li>
+                  <a href={`${PORTAL}/publichoa.php`} target="_blank" rel="noopener noreferrer">
+                    Amenities
+                  </a>
+                </li>
+              </ul>
+              <p className="home-reslist-note">
+                Hosted on the association&rsquo;s resident portal, managed by Taylor Management.
               </p>
             </div>
 
