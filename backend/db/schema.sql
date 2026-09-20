@@ -59,6 +59,7 @@ INSERT INTO categories (slug, name, description, sort_order) VALUES
   ('common_area',   'Common Area',      'Hallways, gym, pool, parking, elevators',      80),
   ('security',      'Security',         'Locks, gates, cameras, access control',        90),
   ('noise',         'Noise Complaint',  'Disturbances and noise issues',               100),
+  ('violation',     'Rules Violation',  'Parking, pets, trash, unapproved changes',    110),
   ('other',         'Other',            'Anything that does not fit another category', 999)
 ON CONFLICT (slug) DO NOTHING;
 
