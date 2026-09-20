@@ -104,6 +104,36 @@ export default function Home() {
                 </div>
               )}
             </div>
+
+            <div className="home-urgent">
+              <h3>If it cannot wait</h3>
+              <p>
+                For anything threatening life or property &mdash; fire, a gas odour, flooding
+                &mdash; call <strong>911</strong> first.
+              </p>
+              <p>
+                For urgent maintenance such as a burst pipe, no heat or no water, contact the
+                association office directly. A request filed here is reviewed during office
+                hours, so it is not the fastest route out of hours.
+              </p>
+            </div>
+
+            {/* The steps follow the call to action they explain, which also
+                takes up the run of empty column the sidebar used to leave. */}
+            <ol className="home-steps home-steps-inline">
+              <li>
+                <strong>Submit your request</strong> with a category and location.
+              </li>
+              <li>
+                <strong>Management reviews it</strong> and assigns someone.
+              </li>
+              <li>
+                <strong>You can comment</strong>, and you see every status change.
+              </li>
+              <li>
+                <strong>It closes</strong> when the work is done.
+              </li>
+            </ol>
           </section>
 
           <aside className="home-aside">
@@ -156,15 +186,6 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="home-card">
-              <h3>How requests work</h3>
-              <ol className="home-steps">
-                <li>Submit your request with a category and location.</li>
-                <li>Management reviews it and assigns someone.</li>
-                <li>You can comment, and you see every status change.</li>
-                <li>It closes when the work is done.</li>
-              </ol>
-            </div>
           </aside>
         </div>
       </main>
