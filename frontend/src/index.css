@@ -484,13 +484,10 @@ th.num { text-align: right; }
 
 /* The photograph is set inline from public/hero.jpg. With no file there the
    solid colour shows instead, so the hero is never a broken image. */
-.home-hero {
-  background-color: #22324a;
-  background-size: cover; background-position: center;
-  /* Sized to the photograph rather than to the viewport: the sign is a wide,
-     shallow subject and a taller band would crop it or blow it up further. */
-  aspect-ratio: 40 / 9; min-height: 170px; max-height: 340px;
-}
+.home-hero { background: #18212f; }
+/* The banner keeps its own proportions and caps its height, so it is never
+   stretched across an arbitrarily wide viewport. */
+.hero-banner { display: block; width: 100%; max-height: 260px; }
 .home-hero-overlay {
   width: 100%;
   background: linear-gradient(180deg, rgba(10, 18, 32, 0), rgba(10, 18, 32, .78));
@@ -559,8 +556,6 @@ th.num { text-align: right; }
   .home-nav { gap: 10px; flex-wrap: nowrap; }
   .home-link { font-size: 14px; white-space: nowrap; }
   .home-btn { padding: 8px 12px; font-size: 13.5px; white-space: nowrap; }
-  .home-hero { min-height: 220px; }
-  .home-hero-inner { padding: 40px 16px 24px; }
 }
 
 /* Secondary nav to the association's existing portal. It scrolls sideways on a

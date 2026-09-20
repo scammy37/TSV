@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
 import Logo from '../components/Logo';
+import HeroBanner from '../components/HeroBanner';
 
 /**
  * The association's existing resident portal, run by Taylor Management on
@@ -27,8 +28,8 @@ const PORTAL_LINKS = [
  * is the only page a resident sees before they have an account -- it has to say
  * who the association is and give them one obvious thing to do.
  *
- * The hero photograph is frontend/public/hero.png. If it is ever removed the
- * solid colour behind shows through, so the page never renders a broken image.
+ * The hero is a drawn banner rather than a photograph, so it stays sharp at
+ * any width and sits at its own size instead of being stretched to fill.
  */
 export default function Home() {
   const { user } = useAuth();
@@ -76,12 +77,8 @@ export default function Home() {
         </div>
       </nav>
 
-      <div
-        className="home-hero"
-        role="img"
-        aria-label="The Townsquare Village entrance sign on Pondview Terrace"
-        style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/hero.png)` }}
-      >
+      <div className="home-hero">
+        <HeroBanner />
       </div>
 
       <main className="home-main">
