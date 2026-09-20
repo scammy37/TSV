@@ -1,69 +1,28 @@
 import React from 'react';
 
 /**
- * The entrance on Pondview Terrace, drawn as a full scene rather than a sign
- * floating on a background.
+ * The entrance sign on Pondview Terrace: the two stone piers, the board between
+ * them, the gold panel with its terrace of gables, and the name.
  *
- * The first version drew only the sign, which left dead bands of colour either
- * side on a wide screen. This carries sky, planting and lawn edge to edge, so
- * widening the viewport reveals more of the scene instead of more empty space.
- * `slice` crops the outer planting rather than shrinking the sign, which keeps
- * the lettering a readable size at every width.
+ * Drawn and nothing else. An earlier version set it in an invented landscape of
+ * treeline and lawn, which read as decoration standing in for a photograph
+ * nobody had. The sign alone on a flat ground is honest about what it is, and
+ * the viewBox frames it tightly so it scales to the width of the page's
+ * content rather than floating in a band of its own.
  */
 export default function HeroBanner() {
   return (
     <svg
       className="hero-banner"
-      viewBox="0 0 1600 300"
-      preserveAspectRatio="xMidYMid slice"
+      viewBox="288 60 1024 208"
       role="img"
       aria-label="The Townsquare Village entrance sign"
       focusable="false"
     >
-      <defs>
-        <linearGradient id="tsvSky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#1d2738" />
-          <stop offset="0.7" stopColor="#28334a" />
-          <stop offset="1" stopColor="#38414f" />
-        </linearGradient>
-        <linearGradient id="tsvLawn" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#3c4a3d" />
-          <stop offset="1" stopColor="#2a3430" />
-        </linearGradient>
-      </defs>
 
-      <rect width="1600" height="300" fill="#222c3d" />
-      <rect width="1600" height="300" fill="url(#tsvSky)" />
-
-      {/* Treeline across the back, so the sky has a horizon rather than an edge. */}
-      <g fill="#1b2430" opacity="0.85">
-        <path d="M0 214c26-4 40-30 58-30s26 16 44 18 30-22 52-22 34 24 56 26 36-18 58-18 30 20 52 20 40-26 62-26 34 22 56 24 38-16 60-16 32 18 54 18 40-24 62-24 36 20 58 22 38-14 60-14 34 16 56 16 42-22 64-22 36 18 58 20 38-12 60-12 34 14 56 14 42-20 64-20 36 16 58 18 38-10 60-10 34 12 56 12 42-18 64-18v98H0z" />
-      </g>
-
-      {/* Lawn, full width. */}
-      <rect x="0" y="246" width="1600" height="54" fill="url(#tsvLawn)" />
-      <rect x="0" y="246" width="1600" height="4" fill="#47563f" opacity="0.6" />
-
-      {/* Low planting along the base, running off both edges. */}
-      <g fill="#2c3a31">
-        <ellipse cx="40" cy="250" rx="72" ry="30" />
-        <ellipse cx="150" cy="252" rx="56" ry="24" />
-        <ellipse cx="255" cy="250" rx="62" ry="27" />
-        <ellipse cx="1350" cy="250" rx="62" ry="27" />
-        <ellipse cx="1455" cy="252" rx="56" ry="24" />
-        <ellipse cx="1560" cy="250" rx="74" ry="31" />
-      </g>
-      <g fill="#354639" opacity="0.8">
-        <ellipse cx="95" cy="256" rx="44" ry="20" />
-        <ellipse cx="205" cy="257" rx="40" ry="18" />
-        <ellipse cx="1400" cy="257" rx="40" ry="18" />
-        <ellipse cx="1510" cy="256" rx="44" ry="20" />
-      </g>
-
-      {/* ---- the sign itself ----
+                        {/* ---- the sign itself ----
           Scaled about its own centre (800, 164) so the surrounding scene
           carries more of the frame and the sign reads as part of it. */}
-      <g transform="translate(800 164) scale(0.68) translate(-800 -164)">
       <g fill="#3d4453">
         <rect x="300" y="72" width="94" height="184" rx="4" />
         <rect x="1206" y="72" width="94" height="184" rx="4" />
@@ -129,13 +88,6 @@ export default function HeroBanner() {
         VILLAGE
       </text>
 
-      </g>
-
-      {/* Shrubs at the foot of each pier, tying the sign into the planting. */}
-      <g fill="#2c3a31">
-        <ellipse cx="470" cy="250" rx="46" ry="21" />
-        <ellipse cx="1130" cy="250" rx="46" ry="21" />
-      </g>
-    </svg>
+      </svg>
   );
 }

@@ -498,13 +498,13 @@ th.num { text-align: right; }
 
 /* The banner fills the band edge to edge and crops its outer planting rather
    than shrinking the sign. */
-.home-hero { background: #222c3d; line-height: 0; }
+/* A flat ground behind the sign -- no invented scenery. */
+.home-hero { background: #1e2633; padding-block: clamp(20px, 3vw, 34px); }
+/* The sign spans the same column as the text below it, so the page has one
+   measure rather than a banner on its own terms. Height follows the artwork. */
 .hero-banner {
-  display: block; width: 100%;
-  /* The band is shallower on a narrow screen on purpose. Cropping is driven by
-     the ratio of width to height, so a tall band on a phone would slice the
-     sign mid-word; a shallow one keeps both piers in frame. */
-  height: clamp(112px, 15vw, 210px);
+  display: block; width: 100%; height: auto;
+  max-width: 1040px; margin: 0 auto; padding-inline: 20px;
 }
 
 .home-main { flex: 1; }
