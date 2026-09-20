@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api, errorMessage } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import Alert from '../components/Alert';
+import Logo from '../components/Logo';
 
 export default function ResetPassword() {
   const [params] = useSearchParams();
@@ -40,7 +41,7 @@ export default function ResetPassword() {
   return (
     <div className="auth-shell">
       <div className="card auth-card">
-        <span className="brand"><span className="brand-mark">TSV</span> Property Services</span>
+        <span className="brand"><Logo size={26} /> <span className="brand-text">Townsquare Village HOA</span></span>
 
         {!token ? (
           <>

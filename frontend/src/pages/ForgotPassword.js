@@ -4,6 +4,7 @@ import { Link, Navigate } from 'react-router-dom';
 import { api, errorMessage } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import Alert from '../components/Alert';
+import Logo from '../components/Logo';
 
 export default function ForgotPassword() {
   const { user } = useAuth();
@@ -32,7 +33,7 @@ export default function ForgotPassword() {
   return (
     <div className="auth-shell">
       <div className="card auth-card">
-        <span className="brand"><span className="brand-mark">TSV</span> Property Services</span>
+        <span className="brand"><Logo size={26} /> <span className="brand-text">Townsquare Village HOA</span></span>
 
         {sent ? (
           <>

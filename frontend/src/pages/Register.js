@@ -5,6 +5,7 @@ import { errorMessage } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import Alert from '../components/Alert';
 import Spinner from '../components/Spinner';
+import Logo from '../components/Logo';
 
 const EMPTY = {
   firstName: '',
@@ -53,7 +54,7 @@ export default function Register() {
   return (
     <div className="auth-shell">
       <div className="card auth-card">
-        <span className="brand"><span className="brand-mark">TSV</span> Property Services</span>
+        <span className="brand"><Logo size={26} /> <span className="brand-text">Townsquare Village HOA</span></span>
         <p style={{ color: 'var(--text-muted)', marginBottom: 20 }}>Create your account.</p>
 
         <Alert>{error}</Alert>

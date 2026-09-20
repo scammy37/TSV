@@ -14,7 +14,7 @@ const config = {
   isProduction: env === 'production',
   isTest: env === 'test',
   port: int(process.env.PORT, 5000),
-  appName: process.env.APP_NAME || 'TSV - Ticket Management System',
+  appName: process.env.APP_NAME || 'Townsquare Village HOA',
   // Emailed links (password reset above all) have to point at the real
   // deployment, and the public URL is not known until the host has assigned
   // one. Render exports it as RENDER_EXTERNAL_URL, so the common case needs no
