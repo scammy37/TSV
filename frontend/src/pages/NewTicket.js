@@ -91,11 +91,11 @@ export default function NewTicket() {
 
           <div className="field-row">
             <div className="field">
-              <label htmlFor="unitNumber">Unit number</label>
-              <input id="unitNumber" value={form.unitNumber} onChange={update('unitNumber')} />
+              <label htmlFor="unitNumber">Address</label>
+              <input id="unitNumber" placeholder="12 Pondview Terrace" value={form.unitNumber} onChange={update('unitNumber')} />
             </div>
             <div className="field">
-              <label htmlFor="locationDetails">Where in the unit?</label>
+              <label htmlFor="locationDetails">Where exactly?</label>
               <input id="locationDetails" placeholder="Under the kitchen sink"
                 value={form.locationDetails} onChange={update('locationDetails')} />
             </div>

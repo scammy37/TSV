@@ -37,7 +37,7 @@ export default function Layout({ children }) {
               <div className="usermenu-name">{user?.fullName}</div>
               <div className="usermenu-role">
                 {user?.role}
-                {user?.unitNumber ? ` · Unit ${user.unitNumber}` : ''}
+                {user?.unitNumber ? ` · ${user.unitNumber}` : ''}
               </div>
             </div>
             <button type="button" className="secondary sm" onClick={handleLogout}>Sign out</button>

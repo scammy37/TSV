@@ -65,7 +65,7 @@ and `/api/auth/register` requires `Authorization: Bearer <token>`.
 | POST | `/auth/register` | Homeowner signup; staff/management need `staffInviteCode` |
 | POST | `/auth/login` | Returns `{ token, user }` |
 | GET | `/auth/me` | Current user |
-| PATCH | `/auth/me` | Update name, unit, phone |
+| PATCH | `/auth/me` | Update name, address, phone |
 | POST | `/auth/change-password` | Requires the current password |
 
 ### Tickets

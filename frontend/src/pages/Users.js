@@ -75,7 +75,7 @@ export default function Users() {
         <div className="filters" style={{ marginBottom: 0 }}>
           <div className="field grow">
             <label htmlFor="q">Search</label>
-            <input id="q" placeholder="Name, email or unit number"
+            <input id="q" placeholder="Name, email or address"
               value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <div className="field">
@@ -109,7 +109,7 @@ export default function Users() {
                 <tr>
                   <th>Name</th>
                   <th>Email</th>
-                  <th>Unit</th>
+                  <th>Address</th>
                   <th>Role</th>
                   <th>Joined</th>
                   <th />

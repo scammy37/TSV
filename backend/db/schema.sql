@@ -193,3 +193,9 @@ ALTER TABLE tickets ADD CONSTRAINT tickets_priority_check
 
 DROP INDEX IF EXISTS idx_tickets_sla_open;
 ALTER TABLE tickets DROP COLUMN IF EXISTS sla_deadline;
+
+-- Residents give a street address rather than a unit number, which needs more
+-- room than the original column allowed. Widening a varchar does not rewrite
+-- the table, and re-running these is a no-op.
+ALTER TABLE users ALTER COLUMN unit_number TYPE VARCHAR(120);
+ALTER TABLE tickets ALTER COLUMN unit_number TYPE VARCHAR(120);

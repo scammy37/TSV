@@ -25,7 +25,7 @@ export default function TicketRow({ ticket, labels, showHomeowner, agingDays }) 
             <span className="sep">·</span>
             <span>
               {ticket.homeowner.fullName}
-              {ticket.homeowner.unitNumber ? ` (Unit ${ticket.homeowner.unitNumber})` : ''}
+              {ticket.homeowner.unitNumber ? ` (${ticket.homeowner.unitNumber})` : ''}
             </span>
           </>
         )}

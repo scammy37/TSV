@@ -94,12 +94,7 @@ export default function Register() {
               </select>
             </div>
 
-            {!isStaffSignup ? (
-              <div className="field">
-                <label htmlFor="unitNumber">Unit number</label>
-                <input id="unitNumber" value={form.unitNumber} onChange={update('unitNumber')} />
-              </div>
-            ) : (
+            {isStaffSignup && (
               <div className="field">
                 <label htmlFor="staffInviteCode">Staff invite code</label>
                 <input id="staffInviteCode" required
@@ -107,6 +102,15 @@ export default function Register() {
               </div>
             )}
           </div>
+
+          {/* A street address needs the full width; the invite code it used to
+              share a row with does not. */}
+          {!isStaffSignup && (
+            <div className="field">
+              <label htmlFor="unitNumber">Address</label>
+              <input id="unitNumber" placeholder="12 Pondview Terrace" value={form.unitNumber} onChange={update('unitNumber')} />
+            </div>
+          )}
 
           <div className="field">
             <label htmlFor="phone">Phone (optional)</label>

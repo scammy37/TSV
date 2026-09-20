@@ -70,15 +70,17 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="field-row">
-            <div className="field">
-              <label htmlFor="unitNumber">Unit number</label>
-              <input id="unitNumber" value={profile.unitNumber} onChange={updateProfile('unitNumber')} />
-            </div>
-            <div className="field">
-              <label htmlFor="phone">Phone</label>
-              <input id="phone" type="tel" value={profile.phone} onChange={updateProfile('phone')} />
-            </div>
+          {/* A street address runs a good deal longer than the unit number this
+              field used to take, so it gets the full width of the card rather
+              than half a row. */}
+          <div className="field">
+            <label htmlFor="unitNumber">Address</label>
+            <input id="unitNumber" placeholder="12 Pondview Terrace" value={profile.unitNumber} onChange={updateProfile('unitNumber')} />
+          </div>
+
+          <div className="field">
+            <label htmlFor="phone">Phone</label>
+            <input id="phone" type="tel" value={profile.phone} onChange={updateProfile('phone')} />
           </div>
 
           <button type="submit" disabled={profileState.busy}>

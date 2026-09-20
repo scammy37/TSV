@@ -10,7 +10,7 @@ const email = Joi.string()
 const password = Joi.string().min(8).max(128);
 const name = Joi.string().trim().min(1).max(100);
 const phone = Joi.string().trim().max(30).allow('', null);
-const unitNumber = Joi.string().trim().max(50).allow('', null);
+const unitNumber = Joi.string().trim().max(120).allow('', null);
 
 const register = Joi.object({
   email: email.required(),

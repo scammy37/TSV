@@ -155,7 +155,7 @@ export default function TicketDetail() {
           <h1 style={{ marginTop: 6 }}>{ticket.title}</h1>
           <p>
             Opened {formatRelative(ticket.createdAt)} by {ticket.homeowner?.fullName}
-            {ticket.unitNumber ? ` · Unit ${ticket.unitNumber}` : ''}
+            {ticket.unitNumber ? ` · ${ticket.unitNumber}` : ''}
           </p>
         </div>
         <Link to="/dashboard"><button type="button" className="secondary">Back to list</button></Link>
