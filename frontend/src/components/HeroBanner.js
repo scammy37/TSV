@@ -60,7 +60,10 @@ export default function HeroBanner() {
         <ellipse cx="1510" cy="256" rx="44" ry="20" />
       </g>
 
-      {/* ---- the sign itself, centred ---- */}
+      {/* ---- the sign itself ----
+          Scaled about its own centre (800, 164) so the surrounding scene
+          carries more of the frame and the sign reads as part of it. */}
+      <g transform="translate(800 164) scale(0.68) translate(-800 -164)">
       <g fill="#3d4453">
         <rect x="300" y="72" width="94" height="184" rx="4" />
         <rect x="1206" y="72" width="94" height="184" rx="4" />
@@ -126,10 +129,12 @@ export default function HeroBanner() {
         VILLAGE
       </text>
 
+      </g>
+
       {/* Shrubs at the foot of each pier, tying the sign into the planting. */}
       <g fill="#2c3a31">
-        <ellipse cx="330" cy="252" rx="52" ry="24" />
-        <ellipse cx="1272" cy="252" rx="52" ry="24" />
+        <ellipse cx="470" cy="250" rx="46" ry="21" />
+        <ellipse cx="1130" cy="250" rx="46" ry="21" />
       </g>
     </svg>
   );

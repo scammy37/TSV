@@ -504,28 +504,28 @@ th.num { text-align: right; }
   /* The band is shallower on a narrow screen on purpose. Cropping is driven by
      the ratio of width to height, so a tall band on a phone would slice the
      sign mid-word; a shallow one keeps both piers in frame. */
-  height: clamp(104px, 19vw, 280px);
+  height: clamp(112px, 15vw, 210px);
 }
 
 .home-main { flex: 1; }
 .home-grid {
-  max-width: 1080px; margin: 0 auto; padding: 36px 20px 48px;
+  max-width: 1040px; margin: 0 auto; padding: 34px 20px 46px;
   display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); gap: 28px; align-items: start;
 }
 @media (max-width: 800px) { .home-grid { grid-template-columns: 1fr; } }
 
 .home-welcome-title {
   font-family: var(--font-display); font-weight: 700;
-  margin: 0 0 16px; font-size: clamp(26px, 3.6vw, 38px);
+  margin: 0 0 14px; font-size: clamp(22px, 2.6vw, 29px);
   letter-spacing: -.01em; line-height: 1.15; text-wrap: balance;
 }
-.home-welcome p { margin: 0 0 14px; color: var(--text-muted); line-height: 1.7; font-size: 15.6px; max-width: 62ch; }
+.home-welcome p { margin: 0 0 13px; color: var(--text-muted); line-height: 1.65; font-size: 15px; max-width: 64ch; }
 
 .home-cta {
   margin-top: 26px; padding: 22px; border-radius: var(--radius);
   background: var(--accent-soft); border: 1px solid var(--border);
 }
-.home-cta h3 { font-family: var(--font-display); font-weight: 700; margin: 0 0 8px; font-size: 21px; letter-spacing: -.005em; }
+.home-cta h3 { font-family: var(--font-display); font-weight: 700; margin: 0 0 7px; font-size: 18px; letter-spacing: -.005em; }
 .home-cta p { margin: 0 0 16px; }
 .home-cta-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
@@ -629,7 +629,7 @@ th.num { text-align: right; }
 }
 .home-urgent h3 {
   font-family: var(--font-display); font-weight: 700;
-  margin: 0 0 6px; font-size: 16.5px; color: var(--danger);
+  margin: 0 0 6px; font-size: 15.5px; color: var(--danger);
 }
-.home-urgent p { margin: 0; color: var(--text); font-size: 14.6px; line-height: 1.6; }
+.home-urgent p { margin: 0; color: var(--text); font-size: 14.2px; line-height: 1.6; }
 .home-urgent p + p { margin-top: 8px; }
