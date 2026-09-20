@@ -27,9 +27,8 @@ const PORTAL_LINKS = [
  * is the only page a resident sees before they have an account -- it has to say
  * who the association is and give them one obvious thing to do.
  *
- * The hero photograph is dropped in at frontend/public/hero.jpg. Until one
- * exists the gradient underneath shows through on its own, so the page never
- * renders a broken image.
+ * The hero photograph is frontend/public/hero.png. If it is ever removed the
+ * solid colour behind shows through, so the page never renders a broken image.
  */
 export default function Home() {
   const { user } = useAuth();
@@ -80,21 +79,15 @@ export default function Home() {
       <div
         className="home-hero"
         role="img"
-        aria-label="Townsquare Village"
-        style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/hero.jpg)` }}
+        aria-label="The Townsquare Village entrance sign on Pondview Terrace"
+        style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/hero.png)` }}
       >
-        <div className="home-hero-overlay">
-          <div className="home-hero-inner">
-            <p className="home-hero-eyebrow">Rockaway, New Jersey</p>
-            <h1 className="home-hero-title">Townsquare Village HOA, Inc.</h1>
-          </div>
-        </div>
       </div>
 
       <main className="home-main">
         <div className="home-grid">
           <section className="home-welcome">
-            <h2>Welcome to Townsquare Village HOA, Inc.</h2>
+            <h1 className="home-welcome-title">Welcome to Townsquare Village HOA, Inc.</h1>
             <p>
               Townsquare Village HOA, Inc. is dedicated to ensuring the beauty, safety and
               stability of the area, promoting neighborliness and pride among the residents,
