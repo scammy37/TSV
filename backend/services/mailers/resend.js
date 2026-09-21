@@ -92,10 +92,27 @@ const createMailer = ({ apiKey, apiBase = API }) => ({
   /**
    * Proves the key is real and accepted. Listing domains is a cheap
    * authenticated GET that sends nothing, so it can run at every boot.
+   *
+   * A sending-only key is the right key to issue here -- it can do nothing
+   * but send -- and it is not permitted to list domains. That refusal means
+   * the key is valid and correctly scoped, which is the opposite of a
+   * problem, so it must not be reported as a failed check. Only an outright
+   * rejection of the credential is a real failure.
    */
   async verify() {
-    await request('/domains', { apiKey, apiBase });
-    return true;
+    try {
+      await request('/domains', { apiKey, apiBase });
+      return { ok: true, verified: true };
+    } catch (err) {
+      if (err.statusCode === 403) {
+        return {
+          ok: true,
+          verified: false,
+          note: 'sending-only key: valid, but cannot be checked further before a real send',
+        };
+      }
+      throw err;
+    }
   },
 });
 

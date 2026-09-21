@@ -293,8 +293,14 @@ const verify = async () => {
     };
   }
   try {
-    await getTransporter().verify();
-    return { ok: true, configured: true };
+    const result = await getTransporter().verify();
+    // The Resend transport returns a note when a correctly-scoped sending-only
+    // key means the check could go no further. Nodemailer just returns true.
+    return {
+      ok: true,
+      configured: true,
+      ...(result && result.note ? { note: result.note } : {}),
+    };
   } catch (err) {
     return { ok: false, configured: true, reason: err.message };
   }
@@ -309,7 +315,10 @@ const verifyAtStartup = async () => {
   const result = await verify();
 
   if (result.ok) {
-    console.log(`Email: ready via ${describeTransport()}, sending as ${config.mail.from}`);
+    console.log(
+      `Email: ready via ${describeTransport()}, sending as ${config.mail.from}`
+      + (result.note ? ` (${result.note})` : ''),
+    );
     return result;
   }
 

@@ -137,3 +137,58 @@ describe('Resend HTTP transport', () => {
     await new Promise((r) => silent.close(r));
   }, 20000);
 });
+
+describe('API key scope', () => {
+  const startStub = (domainsStatus) => new Promise((resolve) => {
+    const http = require('http');
+    const server = http.createServer((req, res) => {
+      let body = '';
+      req.on('data', (c) => { body += c; });
+      req.on('end', () => {
+        const json = (code, payload) => {
+          res.writeHead(code, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(payload));
+        };
+        if (req.url === '/domains') {
+          return domainsStatus === 200
+            ? json(200, { data: [] })
+            : json(403, { name: 'restricted_api_key', message: 'restricted to only send emails' });
+        }
+        if (req.url === '/emails') return json(200, { id: 'msg_scoped' });
+        return json(404, { message: 'no' });
+      });
+    });
+    server.listen(0, '127.0.0.1', () => resolve({
+      apiBase: `http://127.0.0.1:${server.address().port}`,
+      close: () => new Promise((d) => server.close(d)),
+    }));
+  });
+
+  it('accepts a sending-only key, which cannot list domains', async () => {
+    // The correctly-scoped key for this app can do nothing but send, so the
+    // 403 it gets here means it is right, not broken. Reporting that as a
+    // failed check would tell the operator to fix a key that is already
+    // exactly what it should be.
+    const stub = await startStub(403);
+    const mailer = createMailer({ apiKey: 're_send_only', apiBase: stub.apiBase });
+
+    const result = await mailer.verify();
+    expect(result.ok).toBe(true);
+    expect(result.verified).toBe(false);
+    expect(result.note).toMatch(/sending-only/);
+
+    // and it can still do the only thing it is for
+    await expect(mailer.sendMail({
+      from: 'a@example.test', to: 'b@example.test', subject: 's', html: '<p>h</p>',
+    })).resolves.toMatchObject({ messageId: 'msg_scoped' });
+
+    await stub.close();
+  });
+
+  it('reports a full-access key as fully verified', async () => {
+    const stub = await startStub(200);
+    const mailer = createMailer({ apiKey: 're_full', apiBase: stub.apiBase });
+    await expect(mailer.verify()).resolves.toMatchObject({ ok: true, verified: true });
+    await stub.close();
+  });
+});
