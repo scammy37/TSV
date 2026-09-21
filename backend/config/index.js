@@ -78,9 +78,16 @@ const config = {
   // Who notifications come from, whichever transport carries them. Falls back
   // to SMTP_FROM so an existing deployment keeps its configured sender.
   mail: {
+    // Notifications go out from an address nobody reads, so that a resident's
+    // reply cannot vanish into a mailbox that is not part of the workflow.
+    // The request itself is where a reply belongs.
     from: process.env.MAIL_FROM
       || process.env.SMTP_FROM
-      || 'Townsquare Village HOA <office@townsquarevillagenj.com>',
+      || 'Townsquare Village HOA <noreply@townsquarevillagenj.com>',
+
+    // Where to send someone who genuinely needs a person, quoted in emails
+    // that have no request to point at -- a password reset, say.
+    office: process.env.OFFICE_EMAIL || 'office@townsquarevillagenj.com',
   },
 
   bcryptRounds: int(process.env.BCRYPT_ROUNDS, env === 'test' ? 4 : 10),

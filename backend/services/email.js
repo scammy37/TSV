@@ -88,9 +88,12 @@ const layout = (heading, bodyHtml, ticket) => `
         sees it alongside the rest of the history.
       </p>` : ''}
     <p style="margin:28px 0 0;font-size:12px;color:#8a94a6">
-      Sent automatically by ${escapeHtml(config.appName)}. You can reply to this
-      email to reach the association office, but a message left on the request
-      itself will be answered faster.
+      Sent automatically by ${escapeHtml(config.appName)} from an address that
+      is not monitored &mdash; replies to this email will not reach anyone.
+      ${ticket
+    ? 'Use the button above to respond.'
+    : `To contact the association office, email <a href="mailto:${escapeHtml(config.mail.office)}"
+           style="color:#67707f">${escapeHtml(config.mail.office)}</a>.`}
     </p>
   </div>`;
 
