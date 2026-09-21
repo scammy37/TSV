@@ -126,7 +126,19 @@ router.get('/me', authenticate, (req, res) => {
   res.json({ user: publicUser(req.user) });
 });
 
-/** PATCH /api/auth/me */
+/**
+ * PATCH /api/auth/me
+ *
+ * The email address is the login, so changing it is a credential change rather
+ * than a detail edit, and it is treated like one: the current password has to
+ * come with it, and every other session is signed out. Without the password an
+ * open session left on a shared machine would be enough to move the account to
+ * an address its owner does not hold.
+ *
+ * The new address is not verified -- a confirmation link is only worth building
+ * once mail actually leaves this deployment. Until then a typo is recoverable
+ * because management can set the address back from the People page.
+ */
 router.patch('/me', authenticate, validate(schemas.updateProfile), asyncHandler(async (req, res) => {
   const fieldMap = {
     firstName: 'first_name',
@@ -134,6 +146,20 @@ router.patch('/me', authenticate, validate(schemas.updateProfile), asyncHandler(
     unitNumber: 'unit_number',
     phone: 'phone',
   };
+
+  // Joi has already lowercased and trimmed it, which is what the unique index
+  // on lower(email) compares, so this is a real no-op check and not a near one.
+  const newEmail = req.body.email !== undefined && req.body.email !== req.user.email
+    ? req.body.email
+    : null;
+
+  if (newEmail) {
+    if (!req.body.currentPassword) {
+      throw AppError.badRequest('Enter your current password to change your email address');
+    }
+    const matches = await bcrypt.compare(req.body.currentPassword, req.user.password_hash);
+    if (!matches) throw AppError.badRequest('Current password is incorrect');
+  }
 
   const sets = [];
   const values = [];
@@ -144,13 +170,38 @@ router.patch('/me', authenticate, validate(schemas.updateProfile), asyncHandler(
     }
   }
 
-  values.push(req.user.id);
-  const { rows } = await db.query(
-    `UPDATE users SET ${sets.join(', ')} WHERE id = $${values.length} RETURNING *`,
-    values,
-  );
+  if (newEmail) {
+    values.push(newEmail);
+    sets.push(`email = $${values.length}`);
+    // Signs out everywhere else, as a password change does: whoever holds an
+    // old session should not keep it across a change of the login itself.
+    sets.push('token_version = token_version + 1');
+  }
 
-  res.json({ user: publicUser(rows[0]) });
+  if (!sets.length) return res.json({ user: publicUser(req.user) });
+
+  values.push(req.user.id);
+  let rows;
+  try {
+    ({ rows } = await db.query(
+      `UPDATE users SET ${sets.join(', ')} WHERE id = $${values.length} RETURNING *`,
+      values,
+    ));
+  } catch (err) {
+    // The generic handler calls this "That record already exists", which says
+    // nothing about which field or what to do.
+    if (err.code === '23505') {
+      throw AppError.conflict('That email address is already registered to another account');
+    }
+    throw err;
+  }
+
+  // Bumping token_version invalidated the caller's own token too, so hand back
+  // a fresh one or the change would log them out of the session that made it.
+  return res.json({
+    user: publicUser(rows[0]),
+    ...(newEmail ? { token: signToken(rows[0]) } : {}),
+  });
 }));
 
 /** POST /api/auth/change-password */

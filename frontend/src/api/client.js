@@ -58,7 +58,9 @@ export const api = {
   login: (credentials) => client.post('/auth/login', credentials).then((r) => r.data),
   register: (payload) => client.post('/auth/register', payload).then((r) => r.data),
   me: () => client.get('/auth/me').then((r) => r.data.user),
-  updateProfile: (payload) => client.patch('/auth/me', payload).then((r) => r.data.user),
+  // Returns the whole body, not just the user: a changed email address comes
+  // back with a replacement token.
+  updateProfile: (payload) => client.patch('/auth/me', payload).then((r) => r.data),
   changePassword: (payload) => client.post('/auth/change-password', payload).then((r) => r.data),
   forgotPassword: (email) => client.post('/auth/forgot-password', { email }).then((r) => r.data),
   resetPassword: (payload) => client.post('/auth/reset-password', payload).then((r) => r.data),

@@ -10,9 +10,16 @@ export default function Profile() {
   const [profile, setProfile] = useState({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
+    email: user?.email || '',
     unitNumber: user?.unitNumber || '',
     phone: user?.phone || '',
   });
+
+  // The address is the login, so moving it needs the password behind it. The
+  // field only appears once the address actually differs, so the common edit --
+  // a phone number, a corrected surname -- still takes one click.
+  const [emailPassword, setEmailPassword] = useState('');
+  const emailChanged = profile.email.trim().toLowerCase() !== (user?.email || '').toLowerCase();
   const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '' });
 
   const [profileState, setProfileState] = useState({ error: '', notice: '', busy: false });
@@ -25,8 +32,20 @@ export default function Profile() {
     event.preventDefault();
     setProfileState({ error: '', notice: '', busy: true });
     try {
-      setUser(await api.updateProfile(profile));
-      setProfileState({ error: '', notice: 'Profile saved', busy: false });
+      const payload = emailChanged ? { ...profile, currentPassword: emailPassword } : profile;
+      // A changed address signs out every other session, which invalidates the
+      // token this request was made with, so the API hands back a new one.
+      const { user: updated, token } = await api.updateProfile(payload);
+      if (token) adoptSession(token, updated); else setUser(updated);
+
+      setEmailPassword('');
+      setProfileState({
+        error: '',
+        notice: emailChanged
+          ? 'Profile saved. Sign in with your new email address from now on; any other device has been signed out.'
+          : 'Profile saved',
+        busy: false,
+      });
     } catch (err) {
       setProfileState({ error: errorMessage(err, 'Could not save'), notice: '', busy: false });
     }
@@ -76,6 +95,24 @@ export default function Profile() {
               <input id="lastName" required value={profile.lastName} onChange={updateProfile('lastName')} />
             </div>
           </div>
+
+          <div className="field">
+            <label htmlFor="email">Email address</label>
+            <input id="email" type="email" required autoComplete="email"
+              value={profile.email} onChange={updateProfile('email')} />
+            <div className="field-hint">You sign in with this.</div>
+          </div>
+
+          {emailChanged && (
+            <div className="field">
+              <label htmlFor="emailPassword">Current password</label>
+              <input id="emailPassword" type="password" autoComplete="current-password" required
+                value={emailPassword} onChange={(e) => setEmailPassword(e.target.value)} />
+              <div className="field-hint">
+                Needed to change the address you sign in with.
+              </div>
+            </div>
+          )}
 
           {/* A street address runs a good deal longer than the unit number this
               field used to take, so it gets the full width of the card rather

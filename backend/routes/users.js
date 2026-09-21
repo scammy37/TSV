@@ -101,6 +101,7 @@ router.patch('/:id', authorize(ROLES.MANAGEMENT), validate(schemas.idParam, 'par
       isActive: 'is_active',
       firstName: 'first_name',
       lastName: 'last_name',
+      email: 'email',
       unitNumber: 'unit_number',
       phone: 'phone',
     };
@@ -114,10 +115,20 @@ router.patch('/:id', authorize(ROLES.MANAGEMENT), validate(schemas.idParam, 'par
     }
 
     values.push(id);
-    const { rows } = await db.query(
-      `UPDATE users SET ${sets.join(', ')} WHERE id = $${values.length} RETURNING *`,
-      values,
-    );
+    let rows;
+    try {
+      ({ rows } = await db.query(
+        `UPDATE users SET ${sets.join(', ')} WHERE id = $${values.length} RETURNING *`,
+        values,
+      ));
+    } catch (err) {
+      // "That record already exists" from the generic handler names neither the
+      // field nor the fix.
+      if (err.code === '23505') {
+        throw AppError.conflict('That email address is already registered to another account');
+      }
+      throw err;
+    }
     if (!rows[0]) throw AppError.notFound('User not found');
 
     res.json({ user: publicUser(rows[0]) });

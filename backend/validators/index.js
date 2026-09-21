@@ -32,8 +32,12 @@ const login = Joi.object({
 const updateProfile = Joi.object({
   firstName: name,
   lastName: name,
+  email,
   unitNumber,
   phone,
+  // Only meaningful alongside a new email, and required by the route in that
+  // case: the address is the login, so moving it is a credential change.
+  currentPassword: Joi.string(),
 }).min(1);
 
 const changePassword = Joi.object({
@@ -113,6 +117,7 @@ const updateUser = Joi.object({
   isActive: Joi.boolean(),
   firstName: name,
   lastName: name,
+  email,
   unitNumber,
   phone,
 }).min(1);
