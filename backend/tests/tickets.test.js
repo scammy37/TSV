@@ -23,7 +23,17 @@ describe('POST /api/tickets', () => {
   it('files a ticket with a number, an age and an audit entry', async () => {
     const ticket = await createTicket(homeowner, { priority: 'high' });
 
-    expect(ticket.ticketNumber).toMatch(/^TSV-\d{4}-\d{5}$/);
+    // TSV-20260921-1042: the date it was filed, then a number. The date is
+    // asserted against today rather than just matched for shape, since a
+    // well-formed but wrong date would be worse than an obviously broken one.
+    expect(ticket.ticketNumber).toMatch(/^TSV-\d{8}-\d+$/);
+    const today = new Date();
+    const expectedDate = [
+      today.getFullYear(),
+      String(today.getMonth() + 1).padStart(2, '0'),
+      String(today.getDate()).padStart(2, '0'),
+    ].join('');
+    expect(ticket.ticketNumber.split('-')[1]).toBe(expectedDate);
     expect(ticket.status).toBe('open');
     expect(ticket.priority).toBe('high');
     expect(ticket.homeowner.id).toBe(homeowner.id);

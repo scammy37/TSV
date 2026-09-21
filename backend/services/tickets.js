@@ -29,10 +29,27 @@ const SORT_COLUMNS = {
   priority: PRIORITY_ORDER,
 };
 
+/**
+ * TSV-20260921-1042: the date the request was filed, then a number.
+ *
+ * The date is the part a person reads -- "that one is from Tuesday" -- without
+ * having to open anything. The trailing number comes from a sequence rather
+ * than a count of today's tickets, so it is allocated atomically and two
+ * requests filed in the same moment cannot collide.
+ *
+ * Numbers issued under the previous TSV-2026-01000 format are left alone. They
+ * are printed on emails residents already have, and both forms sort and search
+ * the same way.
+ */
 const nextTicketNumber = async (client = db) => {
   const { rows } = await client.query("SELECT nextval('ticket_number_seq') AS n");
-  const year = new Date().getFullYear();
-  return `TSV-${year}-${String(rows[0].n).padStart(5, '0')}`;
+  const now = new Date();
+  const date = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('');
+  return `TSV-${date}-${rows[0].n}`;
 };
 
 const findById = async (id, client = db) => {

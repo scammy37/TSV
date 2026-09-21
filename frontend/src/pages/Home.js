@@ -64,8 +64,8 @@ export default function Home() {
               <Link to="/dashboard" className="home-btn home-btn-primary">My requests</Link>
             ) : (
               <>
-                <Link to="/register" className="home-link">Create an account</Link>
                 <Link to="/login" className="home-btn home-btn-primary">Sign in</Link>
+                <Link to="/register" className="home-link">Create an account</Link>
               </>
             )}
           </div>
@@ -101,9 +101,14 @@ export default function Home() {
                   offered the two ways to have one rather than a button leading
                   somewhere they cannot yet go. */}
               {user ? (
-                <Link to="/tickets/new" className="home-btn home-btn-primary home-btn-lg">
-                  Submit a request
-                </Link>
+                <div className="home-cta-actions">
+                  <Link to="/tickets/new" className="home-btn home-btn-primary home-btn-lg">
+                    Submit a request
+                  </Link>
+                  <Link to="/dashboard" className="home-btn home-btn-quiet home-btn-lg">
+                    My requests
+                  </Link>
+                </div>
               ) : (
                 <div className="home-cta-actions">
                   <Link to="/login" className="home-btn home-btn-primary home-btn-lg">
