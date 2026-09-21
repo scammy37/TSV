@@ -41,7 +41,7 @@ run by Taylor Management. One obvious call to action — submit a request.
 - Submit a request with a category, priority, address and location
 - Follow its status, who is handling it and how long it has been open
 - Comment back and forth with management
-- Correct a request's details until it is resolved, closed or cancelled
+- Correct a request's details until it is closed or cancelled
 - Full history of everything that happened to it
 - Email notification on submission, status change, reply and closure, sent
   from an address that is not monitored — the request itself is where replies
@@ -49,8 +49,8 @@ run by Taylor Management. One obvious call to action — submit a request.
 
 ### Staff and management
 
-- Queue of every ticket, with quick views for active, unassigned, assigned to
-  me, oldest first and all
+- Queue of every ticket, with quick views for open, closed, unassigned and all,
+  and a sort that survives switching between them
 - Filter by status, priority, category and assignee; free-text search;
   pagination
 - Assign to staff, with each person's open workload shown in the picker
@@ -95,7 +95,7 @@ Demo accounts (password `Password123!`):
 
 Sign in as the manager and the resident in two browser profiles to watch both
 sides of the same ticket. The seeded data includes tickets that have been open
-a while, an internal note and resolved work, so the reports page has something
+a while, an internal note and closed work, so the reports page has something
 to show.
 
 Codespaces is free for a monthly allowance on personal accounts, and the

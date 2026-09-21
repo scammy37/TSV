@@ -150,11 +150,15 @@ reach a person.
 
 | Role | Can do |
 |---|---|
-| `homeowner` | File tickets, see and comment on **their own** tickets, and edit the title, description, category and location until the ticket is resolved, closed or cancelled |
+| `homeowner` | File tickets, see and comment on **their own** tickets, and edit the title, description, category and location until the ticket is closed or cancelled |
 | `staff` | See and triage every ticket, assign, comment, post internal notes, view reports |
 | `management` | Everything staff can do, plus the people directory, role changes and password resets |
 
 Homeowners never see internal notes, and never see that one exists.
+
+`staff` remains a valid role in the API, but the interface no longer offers it:
+signup and the People page list homeowner and management only. It is kept
+because accounts may already hold it and every permission check honours it.
 
 ## API
 
@@ -181,7 +185,7 @@ requires `Authorization: Bearer <token>`.
 | GET | `/tickets` | Filters: `status`, `priority`, `category`, `assignedTo` (id, `me`, `unassigned`), `homeownerId`, `q`, `open`, `sort` (`created_at`, `updated_at`, `priority`, `status`), `order`, `page`, `limit`. `status` and `priority` accept repeats. Homeowners are always scoped to their own tickets. |
 | POST | `/tickets` | Staff may pass `homeownerId` to file on someone's behalf |
 | GET | `/tickets/:id` | |
-| PATCH | `/tickets/:id` | Triage. Homeowners may only change `title`, `description`, `category` and `locationDetails`, and only until the ticket is resolved, closed or cancelled. Anything else is a 403 listing what they may change |
+| PATCH | `/tickets/:id` | Triage. Homeowners may only change `title`, `description`, `category` and `locationDetails`, and only until the ticket is closed or cancelled. Anything else is a 403 listing what they may change |
 | POST | `/tickets/:id/assign` | `{ assignedTo: <id or null> }`, staff only |
 | GET | `/tickets/:id/comments` | Internal notes filtered out for homeowners |
 | POST | `/tickets/:id/comments` | `{ comment, isInternal }`; `isInternal` is ignored for homeowners |
@@ -201,11 +205,16 @@ requires `Authorization: Bearer <token>`.
 ## Ticket lifecycle
 
 ```
-open ──> in_progress ──> resolved ──> closed
-  │          ↕                │
-  │       on_hold             └──> in_progress (reopen)
+open ──> in_progress ──> closed
+  │          ↕             │
+  │       on_hold          └──> in_progress (reopen)
   └──> cancelled ──> open
 ```
+
+`closed` is the only finish: a separate `resolved` step was removed, because
+for this association marking work done and closing it were the same act.
+`resolved_at` survives as the completion time the reports are built on, set
+when a ticket closes.
 
 Illegal jumps are rejected with a 400 listing the legal next statuses, so the
 audit trail can never contain a nonsensical transition.
