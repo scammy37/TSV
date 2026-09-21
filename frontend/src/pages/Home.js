@@ -93,9 +93,9 @@ export default function Home() {
             <div className="home-cta">
               <h3>Report an issue or violation to management</h3>
               <p>
-                Report a maintenance problem or a rules violation and follow it through to
-                resolution. You will see its status, who is handling it and every update
-                along the way.
+                Report a problem with the grounds, a shared space or the community rules.
+                You will see its status and every update along the way, right through to
+                closing. Repairs inside your own home stay with the homeowner.
               </p>
               {user ? (
                 <Link to="/tickets/new" className="home-btn home-btn-primary home-btn-lg">
@@ -120,7 +120,7 @@ export default function Home() {
                 <strong>Submit your request</strong> with a category and location.
               </li>
               <li>
-                <strong>Management reviews it</strong> and assigns someone.
+                <strong>Management picks it up</strong> and starts work.
               </li>
               <li>
                 <strong>You can comment</strong>, and you see every status change.

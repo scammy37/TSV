@@ -45,8 +45,9 @@ export default function NewTicket() {
     <>
       <div className="page-head">
         <div>
-          <h1>New service request</h1>
-          <p>Tell us what needs attention and we will assign it to the right person.</p>
+          <h1>New request</h1>
+          <p>Report a problem with the grounds, a shared space, or the community rules.
+            Repairs inside your own home stay with the homeowner.</p>
         </div>
       </div>
 
@@ -55,9 +56,9 @@ export default function NewTicket() {
 
         <form onSubmit={handleSubmit}>
           <div className="field">
-            <label htmlFor="title">What is the problem?</label>
+            <label htmlFor="title">What&rsquo;s the issue?</label>
             <input id="title" required minLength={5} maxLength={255}
-              placeholder="Kitchen sink is leaking"
+              placeholder="Pool gate is not latching"
               value={form.title} onChange={update('title')} />
           </div>
 
@@ -85,18 +86,18 @@ export default function NewTicket() {
           <div className="field">
             <label htmlFor="description">Describe the issue</label>
             <textarea id="description" required minLength={10} rows={6}
-              placeholder="When did it start, what have you tried, and is it getting worse?"
+              placeholder="When did you notice it, has it got worse since, and is anything unsafe right now?"
               value={form.description} onChange={update('description')} />
           </div>
 
           <div className="field-row">
             <div className="field">
-              <label htmlFor="unitNumber">Address</label>
+              <label htmlFor="unitNumber">Your address</label>
               <input id="unitNumber" placeholder="12 Pondview Terrace" value={form.unitNumber} onChange={update('unitNumber')} />
             </div>
             <div className="field">
-              <label htmlFor="locationDetails">Where exactly?</label>
-              <input id="locationDetails" placeholder="Under the kitchen sink"
+              <label htmlFor="locationDetails">Where is it?</label>
+              <input id="locationDetails" placeholder="By the mailboxes"
                 value={form.locationDetails} onChange={update('locationDetails')} />
             </div>
           </div>
