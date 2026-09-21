@@ -12,3 +12,6 @@ dist/
 
 # devcontainer runtime output
 .devcontainer/logs/
+
+# Database dumps -- never commit real resident data
+backups/

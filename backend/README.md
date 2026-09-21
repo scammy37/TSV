@@ -34,6 +34,7 @@ message as well, which is the only thing that actually proves delivery.
 | `npm run seed` | load demo accounts and tickets |
 | `npm run create-admin -- <email> ["Full Name"]` | create, or promote to, a management account |
 | `npm run check:email [-- <address>]` | prove the SMTP connection; with an address, send a real message |
+| `npm run backup [-- <file>]` | dump the database to `backups/` |
 | `npm test` | Jest + supertest against `tsv_test` |
 
 ## Creating the first management account
@@ -76,6 +77,34 @@ default), created and migrated automatically before the suite. They use the
 same `DB_HOST`/`DB_USER`/`DB_PASSWORD` as development and never touch `tsv_db`
 — a stray `DATABASE_URL` in the environment cannot point the suite at something
 real.
+
+## Backups
+
+```bash
+npm run backup                     # -> backups/tsv-<timestamp>.dump
+npm run backup -- /path/out.dump
+```
+
+Reads the same connection the app uses, so on a host that provides
+`DATABASE_URL` it takes no arguments and no credentials are typed anywhere.
+The password reaches `pg_dump` through `PGPASSWORD` rather than in the
+connection string, because command-line arguments are visible to anyone who
+can list processes. `backups/` is gitignored — a dump is real resident data.
+
+Restore into an empty database:
+
+```bash
+pg_restore --clean --if-exists --no-owner -d "<DATABASE_URL>" <file>
+```
+
+**`pg_dump` must be at least as new as the server.** It reads older servers
+but refuses newer ones, and managed hosts run current majors — so a laptop
+with PostgreSQL 16 client tools cannot dump an 18 server. The script checks
+both versions up front and says which to install, rather than letting
+`pg_dump` fail with a message that does not tell you what to do.
+
+The free tier on most hosts takes no backups at all, and Render deletes free
+databases outright at 90 days. Run this before any plan change or migration.
 
 ## Roles
 

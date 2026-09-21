@@ -11,7 +11,8 @@
     "create-admin": "node scripts/create-admin.js",
     "check:email": "node scripts/check-email.js",
     "test": "cross-env NODE_ENV=test jest --runInBand",
-    "test:watch": "cross-env NODE_ENV=test jest --runInBand --watch"
+    "test:watch": "cross-env NODE_ENV=test jest --runInBand --watch",
+    "backup": "node scripts/backup.js"
   },
   "keywords": [],
   "author": "",
