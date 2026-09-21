@@ -54,7 +54,10 @@ export default function App() {
           } />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
-          <Route path="*" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+          {/* Not behind ProtectedRoute: the site has a public front door, so a
+              stranger on a bad URL must get "no such page", not a login form.
+              NotFound renders the signed-in or signed-out version itself. */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

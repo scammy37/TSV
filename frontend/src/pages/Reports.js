@@ -51,7 +51,7 @@ export default function Reports() {
       <div className="page-head">
         <div>
           <h1>Reports</h1>
-          <p>Volume, workload and ticket age across the complex.</p>
+          <p>Volume, workload and ticket age across the association.</p>
         </div>
       </div>
 
