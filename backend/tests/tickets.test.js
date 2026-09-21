@@ -54,7 +54,7 @@ describe('POST /api/tickets', () => {
   it('rejects a too-short title', async () => {
     const res = await request(app).post('/api/tickets')
       .set('Authorization', homeowner.auth())
-      .send({ title: 'Hi', description: 'A description long enough.', category: 'plumbing' });
+      .send({ title: 'Hi', description: 'A description long enough.', category: 'common_area' });
 
     expect(res.status).toBe(400);
   });
@@ -65,7 +65,7 @@ describe('POST /api/tickets', () => {
       .send({
         title: 'Reported by phone: no hot water',
         description: 'Homeowner called the office about no hot water since Tuesday.',
-        category: 'plumbing',
+        category: 'common_area',
         homeownerId: homeowner.id,
       });
 
@@ -79,7 +79,7 @@ describe('POST /api/tickets', () => {
       .send({
         title: 'Not my unit at all',
         description: 'Trying to file against a neighbour unit.',
-        category: 'plumbing',
+        category: 'common_area',
         homeownerId: otherHomeowner.id,
       });
 
@@ -249,20 +249,25 @@ describe('PATCH /api/tickets/:id', () => {
 
   it('refuses an illegal status transition', async () => {
     const ticket = await createTicket(homeowner);
-    const res = await request(app).patch(`/api/tickets/${ticket.id}`)
+    // Closing is reachable from the active queue; cancelling a closed ticket
+    // is not -- reopen it first if it was closed by mistake.
+    await request(app).patch(`/api/tickets/${ticket.id}`)
       .set('Authorization', staff.auth()).send({ status: 'closed' });
+
+    const res = await request(app).patch(`/api/tickets/${ticket.id}`)
+      .set('Authorization', staff.auth()).send({ status: 'cancelled' });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/Cannot move a ticket/);
   });
 
-  it('stamps resolvedAt on resolve and clears it on reopen', async () => {
+  it('stamps resolvedAt on close and clears it on reopen', async () => {
     const ticket = await createTicket(homeowner);
 
-    const resolved = await request(app).patch(`/api/tickets/${ticket.id}`)
+    const closed = await request(app).patch(`/api/tickets/${ticket.id}`)
       .set('Authorization', staff.auth())
-      .send({ status: 'resolved', resolutionNotes: 'Replaced the supply line.' });
-    expect(resolved.body.ticket.resolvedAt).not.toBeNull();
+      .send({ status: 'closed', resolutionNotes: 'Latch replaced.' });
+    expect(closed.body.ticket.resolvedAt).not.toBeNull();
 
     const reopened = await request(app).patch(`/api/tickets/${ticket.id}`)
       .set('Authorization', staff.auth()).send({ status: 'in_progress' });
@@ -287,14 +292,14 @@ describe('PATCH /api/tickets/:id', () => {
     expect(priority.status).toBe(403);
 
     const status = await request(app).patch(`/api/tickets/${ticket.id}`)
-      .set('Authorization', homeowner.auth()).send({ status: 'resolved' });
+      .set('Authorization', homeowner.auth()).send({ status: 'closed' });
     expect(status.status).toBe(403);
   });
 
   it('stops a homeowner editing a closed ticket', async () => {
     const ticket = await createTicket(homeowner);
     await request(app).patch(`/api/tickets/${ticket.id}`)
-      .set('Authorization', staff.auth()).send({ status: 'resolved' });
+      .set('Authorization', staff.auth()).send({ status: 'closed' });
     await request(app).patch(`/api/tickets/${ticket.id}`)
       .set('Authorization', staff.auth()).send({ status: 'closed' });
 

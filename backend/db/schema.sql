@@ -48,19 +48,24 @@ CREATE TABLE IF NOT EXISTS categories (
   sort_order  INTEGER NOT NULL DEFAULT 100
 );
 
-INSERT INTO categories (slug, name, description, sort_order) VALUES
-  ('plumbing',      'Plumbing',         'Leaks, clogs, water pressure, fixtures',       10),
-  ('electrical',    'Electrical',       'Outlets, lighting, breakers, wiring',          20),
-  ('hvac',          'Heating & Cooling','Furnace, A/C, thermostat, ventilation',        30),
-  ('appliance',     'Appliance',        'Refrigerator, oven, dishwasher, laundry',      40),
-  ('structural',    'Structural',       'Doors, windows, walls, flooring, roofing',     50),
-  ('pest_control',  'Pest Control',     'Insects, rodents, other pests',                60),
-  ('landscaping',   'Landscaping',      'Lawn, trees, irrigation, snow removal',        70),
-  ('common_area',   'Common Area',      'Hallways, gym, pool, parking, elevators',      80),
-  ('security',      'Security',         'Locks, gates, cameras, access control',        90),
-  ('noise',         'Noise Complaint',  'Disturbances and noise issues',               100),
-  ('violation',     'Rules Violation',  'Parking, pets, trash, unapproved changes',    110),
-  ('other',         'Other',            'Anything that does not fit another category', 999)
+-- The inactive rows are categories the association no longer takes requests
+-- under: those are the homeowner's own repairs, not common property. They are
+-- seeded rather than left out so a ticket filed under one before the change
+-- keeps a category to point at, and so bringing one back is a flag rather than
+-- a migration. Only is_active rows reach the dropdowns; see GET /api/meta.
+INSERT INTO categories (slug, name, description, sort_order, is_active) VALUES
+  ('plumbing',      'Plumbing',         'Leaks, clogs, water pressure, fixtures',       10, false),
+  ('electrical',    'Electrical',       'Outlets, lighting, breakers, wiring',          20, false),
+  ('hvac',          'Heating & Cooling','Furnace, A/C, thermostat, ventilation',        30, false),
+  ('appliance',     'Appliance',        'Refrigerator, oven, dishwasher, laundry',      40, false),
+  ('structural',    'Structural',       'Doors, windows, walls, flooring, roofing',     50, false),
+  ('pest_control',  'Pest Control',     'Insects, rodents, other pests',                60, false),
+  ('landscaping',   'Landscaping',      'Lawn, trees, irrigation, snow removal',        70, true),
+  ('common_area',   'Common Area',      'Hallways, gym, pool, parking, elevators',      80, true),
+  ('security',      'Security',         'Locks, gates, cameras, access control',        90, true),
+  ('noise',         'Noise Complaint',  'Disturbances and noise issues',               100, false),
+  ('violation',     'Rules Violation',  'Parking, pets, trash, unapproved changes',    110, true),
+  ('other',         'Other',            'Anything that does not fit another category', 999, true)
 ON CONFLICT (slug) DO NOTHING;
 
 -- -----------------------------------------------------------------------------
@@ -79,7 +84,7 @@ CREATE TABLE IF NOT EXISTS tickets (
                      CHECK (priority IN ('low', 'medium', 'high')),
   status           VARCHAR(20) NOT NULL DEFAULT 'open'
                      CHECK (status IN ('open', 'in_progress', 'on_hold',
-                                       'resolved', 'closed', 'cancelled')),
+                                       'closed', 'cancelled')),
   title            VARCHAR(255) NOT NULL,
   description      TEXT NOT NULL,
   location_details TEXT,
@@ -100,7 +105,7 @@ CREATE INDEX IF NOT EXISTS idx_tickets_category   ON tickets (category);
 CREATE INDEX IF NOT EXISTS idx_tickets_created_at ON tickets (created_at DESC);
 -- Open tickets oldest-first is the hot query on the management dashboard.
 CREATE INDEX IF NOT EXISTS idx_tickets_open_age ON tickets (created_at)
-  WHERE status NOT IN ('resolved', 'closed', 'cancelled');
+  WHERE status NOT IN ('closed', 'cancelled');
 
 DROP TRIGGER IF EXISTS trg_tickets_updated_at ON tickets;
 CREATE TRIGGER trg_tickets_updated_at BEFORE UPDATE ON tickets
@@ -220,3 +225,40 @@ ALTER TABLE tickets ALTER COLUMN unit_number TYPE VARCHAR(120);
 ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0;
+
+-- -----------------------------------------------------------------------------
+-- Resolved was dropped from the workflow: a ticket now goes straight from the
+-- active queue to closed, so there is one fewer step for a queue worked by one
+-- person, and no pile of resolved-but-not-closed tickets nobody revisits.
+--
+-- resolved_at stays and is now stamped when a ticket closes. It means "when the
+-- work was finished" rather than "when it entered the resolved status", which is
+-- what every report was already using it for, so the reporting history survives
+-- this intact.
+-- -----------------------------------------------------------------------------
+
+-- Land the existing resolved tickets on closed before the constraint that
+-- forbids the old value is installed, or the constraint would be rejected.
+-- resolved_at already holds the completion time for these, so closed_at takes
+-- it rather than now(), which would date every one of them to this migration.
+UPDATE tickets
+   SET status = 'closed',
+       closed_at = COALESCE(closed_at, resolved_at, now())
+ WHERE status = 'resolved';
+
+ALTER TABLE tickets DROP CONSTRAINT IF EXISTS tickets_status_check;
+ALTER TABLE tickets ADD CONSTRAINT tickets_status_check
+  CHECK (status IN ('open', 'in_progress', 'on_hold', 'closed', 'cancelled'));
+
+-- The predicate changed, and CREATE INDEX IF NOT EXISTS will not alter an index
+-- that already exists, so this one is replaced rather than skipped.
+DROP INDEX IF EXISTS idx_tickets_open_age;
+CREATE INDEX IF NOT EXISTS idx_tickets_open_age ON tickets (created_at)
+  WHERE status NOT IN ('closed', 'cancelled');
+
+-- The association takes requests on common property and the rules, not on a
+-- homeowner's own plumbing, wiring or appliances. Deactivating rather than
+-- deleting keeps the category on tickets already filed under it.
+UPDATE categories SET is_active = false
+ WHERE slug IN ('plumbing', 'electrical', 'hvac', 'appliance',
+                'structural', 'pest_control', 'noise');

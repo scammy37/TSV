@@ -9,7 +9,7 @@ import { StatusBadge, PriorityBadge, AgeBadge, formatAge } from '../components/B
 import { useAuth } from '../context/AuthContext';
 import { formatDateTime, formatRelative, humanize } from '../utils/format';
 
-const TERMINAL = ['resolved', 'closed', 'cancelled'];
+const TERMINAL = ['closed', 'cancelled'];
 
 /** Renders one audit-trail entry as a sentence. */
 function ActivityLine({ entry }) {
@@ -160,7 +160,10 @@ export default function TicketDetail() {
 
   const nextStatuses = meta?.nextStatuses?.[ticket.status] || [];
   const isClosed = TERMINAL.includes(ticket.status);
-  const canComment = isStaff || !isClosed || ticket.status === 'resolved';
+  // Closing is how a request is finished, and the closing email asks the
+  // homeowner to say if it is not actually fixed, so a closed ticket still
+  // takes replies. Cancelled is the end of the conversation.
+  const canComment = isStaff || ticket.status !== 'cancelled';
 
   return (
     <>
@@ -327,7 +330,7 @@ export default function TicketDetail() {
               )}
               {ticket.resolvedAt && (
                 <div className="meta-item">
-                  <span className="meta-label">Resolved</span>
+                  <span className="meta-label">Completed</span>
                   <span className="meta-value">{formatRelative(ticket.resolvedAt)}</span>
                 </div>
               )}
@@ -389,7 +392,7 @@ export default function TicketDetail() {
                         () => api.updateTicket(ticket.id, {
                           status,
                           // Carry the notes along when resolving.
-                          ...(status === 'resolved' && resolutionNotes ? { resolutionNotes } : {}),
+                          ...(status === 'closed' && resolutionNotes ? { resolutionNotes } : {}),
                         }),
                         `Moved to ${meta?.statusLabels?.[status] || status}`,
                       )}
@@ -407,7 +410,7 @@ export default function TicketDetail() {
                     placeholder="What was done to fix it?"
                     value={resolutionNotes} onChange={(e) => setResolutionNotes(e.target.value)} />
                   <div className="field-hint">
-                    Included in the homeowner email when you mark this resolved.
+                    Included in the homeowner email when you close this ticket.
                   </div>
                 </div>
               )}

@@ -60,9 +60,9 @@ const createTicket = async (user, overrides = {}) => {
     .post('/api/tickets')
     .set('Authorization', user.auth())
     .send({
-      title: 'Kitchen sink is leaking',
-      description: 'Water is pooling under the sink cabinet every morning.',
-      category: 'plumbing',
+      title: 'Pool gate is not latching',
+      description: 'The gate swings back open unless you pull it hard.',
+      category: 'common_area',
       priority: 'medium',
       ...overrides,
     });

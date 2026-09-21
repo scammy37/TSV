@@ -188,7 +188,11 @@ describe('GET /api/meta', () => {
     const res = await request(app).get('/api/meta').set('Authorization', homeowner.auth());
 
     expect(res.status).toBe(200);
-    expect(res.body.categories.map((c) => c.slug)).toContain('plumbing');
+    const slugs = res.body.categories.map((c) => c.slug);
+    expect(slugs).toContain('common_area');
+    // Retired categories stay in the table for the tickets already filed under
+    // them, but must never reach a dropdown again.
+    expect(slugs).not.toContain('plumbing');
     expect(res.body.priorities).toEqual(expect.arrayContaining([
       expect.objectContaining({ value: 'high', label: 'High' }),
     ]));

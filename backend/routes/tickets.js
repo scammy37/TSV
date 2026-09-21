@@ -147,8 +147,13 @@ router.patch('/:id', loadTicket, validate(schemas.updateTicket), asyncHandler(as
   }
 
   const nextStatus = req.body.status;
-  if (nextStatus === 'resolved' && !before.resolved_at) sets.push('resolved_at = now()');
-  if (nextStatus === 'closed') sets.push('closed_at = now()');
+  // resolved_at is the completion time the reports are built on. Closing is
+  // what completes a ticket now, so that is where it gets stamped -- and only
+  // the first time, so reopening and closing again keeps the original.
+  if (nextStatus === 'closed') {
+    sets.push('closed_at = now()');
+    if (!before.resolved_at) sets.push('resolved_at = now()');
+  }
   // Reopening clears the resolution timestamps so reporting stays honest.
   if (nextStatus && !TERMINAL_STATUSES.includes(nextStatus)) {
     sets.push('resolved_at = NULL', 'closed_at = NULL');
@@ -167,7 +172,7 @@ router.patch('/:id', loadTicket, validate(schemas.updateTicket), asyncHandler(as
   const assigneeChanged = changes.some((c) => c.field === 'assigned_to');
 
   if (statusChanged) {
-    const template = updated.status === 'resolved' ? 'ticket_resolved' : 'ticket_status_changed';
+    const template = updated.status === 'closed' ? 'ticket_closed' : 'ticket_status_changed';
     email.notify(template, updated.homeowner_email, { ticket: updated, oldStatus: before.status });
   }
   if (assigneeChanged && updated.assigned_to) {
@@ -269,8 +274,12 @@ router.get('/:id/comments', loadTicket, asyncHandler(async (req, res) => {
 router.post('/:id/comments', loadTicket, validate(schemas.createComment), asyncHandler(async (req, res) => {
   const isInternal = isStaff(req.user) ? req.body.isInternal : false;
 
-  if (!isStaff(req.user) && TERMINAL_STATUSES.includes(req.ticket.status) && req.ticket.status !== 'resolved') {
-    throw AppError.forbidden('This ticket is closed; open a new request instead');
+  // A homeowner may still reply on a closed ticket. Closing is how a request is
+  // finished now that resolved is gone, and the closing email invites them to
+  // say so if it is not actually fixed -- blocking them here would make that
+  // invitation a lie. Cancelled is the one end state with nothing to add to.
+  if (!isStaff(req.user) && req.ticket.status === 'cancelled') {
+    throw AppError.forbidden('This ticket was cancelled; open a new request instead');
   }
 
   const created = await db.transaction(async (client) => {
