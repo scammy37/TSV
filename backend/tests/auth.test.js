@@ -157,3 +157,96 @@ describe('profile management', () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe('changing your own email address', () => {
+  it('moves the login to the new address and keeps the caller signed in', async () => {
+    const user = await createUser();
+    const next = uniqueEmail('moved');
+
+    const res = await request(app).patch('/api/auth/me')
+      .set('Authorization', user.auth())
+      .send({ email: next, currentPassword: user.password });
+
+    expect(res.status).toBe(200);
+    expect(res.body.user.email).toBe(next);
+
+    // The response carries a replacement token because the change signed out
+    // every session, including the one that made the request.
+    expect(res.body.token).toEqual(expect.any(String));
+    const after = await request(app).get('/api/auth/me')
+      .set('Authorization', `Bearer ${res.body.token}`);
+    expect(after.status).toBe(200);
+
+    const newLogin = await request(app).post('/api/auth/login')
+      .send({ email: next, password: user.password });
+    expect(newLogin.status).toBe(200);
+
+    const oldLogin = await request(app).post('/api/auth/login')
+      .send({ email: user.email, password: user.password });
+    expect(oldLogin.status).toBe(401);
+  });
+
+  it('signs out the sessions that predate the change', async () => {
+    const user = await createUser();
+    const before = await request(app).get('/api/auth/me').set('Authorization', user.auth());
+    expect(before.status).toBe(200);
+
+    await request(app).patch('/api/auth/me')
+      .set('Authorization', user.auth())
+      .send({ email: uniqueEmail('moved'), currentPassword: user.password });
+
+    const after = await request(app).get('/api/auth/me').set('Authorization', user.auth());
+    expect(after.status).toBe(401);
+  });
+
+  it('refuses without the current password, and with the wrong one', async () => {
+    const user = await createUser();
+
+    const missing = await request(app).patch('/api/auth/me')
+      .set('Authorization', user.auth()).send({ email: uniqueEmail('nope') });
+    expect(missing.status).toBe(400);
+
+    const wrong = await request(app).patch('/api/auth/me')
+      .set('Authorization', user.auth())
+      .send({ email: uniqueEmail('nope'), currentPassword: 'WrongPassword1!' });
+    expect(wrong.status).toBe(400);
+
+    const me = await request(app).get('/api/auth/me').set('Authorization', user.auth());
+    expect(me.body.user.email).toBe(user.email);
+  });
+
+  it('refuses an address another account already holds, and says so', async () => {
+    const [user, other] = [await createUser(), await createUser()];
+
+    const res = await request(app).patch('/api/auth/me')
+      .set('Authorization', user.auth())
+      .send({ email: other.email, currentPassword: user.password });
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatch(/already registered/i);
+  });
+
+  it('leaves the other details editable without a password', async () => {
+    const user = await createUser();
+    const res = await request(app).patch('/api/auth/me')
+      .set('Authorization', user.auth())
+      .send({ phone: '555-0199' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.token).toBeUndefined();
+    // Still the session it was made with.
+    const me = await request(app).get('/api/auth/me').set('Authorization', user.auth());
+    expect(me.status).toBe(200);
+  });
+
+  it('treats the caller\'s own address as a no-op, password or not', async () => {
+    const user = await createUser();
+    const res = await request(app).patch('/api/auth/me')
+      .set('Authorization', user.auth())
+      .send({ email: user.email.toUpperCase(), phone: '555-0123' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.token).toBeUndefined();
+    expect(res.body.user.phone).toBe('555-0123');
+  });
+});

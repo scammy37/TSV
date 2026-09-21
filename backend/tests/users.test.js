@@ -1,4 +1,6 @@
-const { app, db, request, resetDatabase, createUser, createTicket } = require('./helpers');
+const {
+  app, db, request, uniqueEmail, resetDatabase, createUser, createTicket,
+} = require('./helpers');
 
 let homeowner;
 let staff;
@@ -107,6 +109,27 @@ describe('PATCH /api/users/:id', () => {
     const res = await request(app).patch('/api/users/999999')
       .set('Authorization', manager.auth()).send({ role: 'staff' });
     expect(res.status).toBe(404);
+  });
+
+  it('corrects a homeowner email address, and the new one is the login', async () => {
+    const next = uniqueEmail('corrected');
+    const res = await request(app).patch(`/api/users/${homeowner.id}`)
+      .set('Authorization', manager.auth()).send({ email: next });
+
+    expect(res.status).toBe(200);
+    expect(res.body.user.email).toBe(next);
+
+    const login = await request(app).post('/api/auth/login')
+      .send({ email: next, password: homeowner.password });
+    expect(login.status).toBe(200);
+  });
+
+  it('refuses an address another account already holds, and says so', async () => {
+    const res = await request(app).patch(`/api/users/${homeowner.id}`)
+      .set('Authorization', manager.auth()).send({ email: manager.email });
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatch(/already registered/i);
   });
 });
 

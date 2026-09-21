@@ -226,7 +226,34 @@ export default function Users() {
                           </span>
                         )}
                       </td>
-                      <td>{u.email}</td>
+                      <td>
+                        {/* Editable in place like the role beside it. Keyed on
+                            the current address so a successful save re-mounts
+                            the input, while a rejected one leaves what was
+                            typed on screen next to the error explaining it. */}
+                        <input
+                          key={u.email}
+                          type="email"
+                          defaultValue={u.email}
+                          disabled={busyId === u.id}
+                          title="Press Enter to save, Escape to cancel"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') e.currentTarget.blur();
+                            if (e.key === 'Escape') {
+                              e.currentTarget.value = u.email;
+                              e.currentTarget.blur();
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const next = e.target.value.trim();
+                            if (!next || next.toLowerCase() === u.email.toLowerCase()) {
+                              e.target.value = u.email;
+                              return;
+                            }
+                            patch(u.id, { email: next }, `${u.fullName} is now ${next}`);
+                          }}
+                        />
+                      </td>
                       <td>{u.unitNumber || '--'}</td>
                       <td>
                         <select
