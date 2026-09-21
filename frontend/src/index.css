@@ -652,3 +652,7 @@ th.num { text-align: right; }
   background: var(--surface-alt); border: 1px solid var(--border);
   border-radius: 6px; user-select: all;
 }
+
+/* The office number carries more weight than the text around it: on the
+   emergency notice it is the thing someone is scanning for. */
+.home-phone { font-weight: 650; white-space: nowrap; }

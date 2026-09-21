@@ -15,6 +15,13 @@ import HeroBanner from '../components/HeroBanner';
  */
 const PORTAL = 'https://engage.goenumerate.com/s/townsquarevillage';
 
+// Most residents reach this page on a phone, so the number is a tel: link
+// everywhere it appears -- tappable rather than something to write down. Held
+// in one place so the office card, the emergency notice and the footer can
+// never drift apart.
+const OFFICE_PHONE = '973-328-4015';
+const OFFICE_PHONE_HREF = 'tel:+19733284015';
+
 const PORTAL_LINKS = [
   { label: 'News & events', href: `${PORTAL}/communityfeed.php` },
   { label: 'Documents & payments', href: `${PORTAL}/myhoaresources.php` },
@@ -113,9 +120,11 @@ export default function Home() {
                 &mdash; call <strong>911</strong> first.
               </p>
               <p>
-                For urgent maintenance such as a burst pipe, no heat or no water, contact the
-                association office directly. A request filed here is reviewed during office
-                hours, so it is not the fastest route out of hours.
+                For urgent maintenance such as a burst pipe, no heat or no water, call the
+                association office on{' '}
+                <a className="home-phone" href={OFFICE_PHONE_HREF}>{OFFICE_PHONE}</a>.
+                A request filed here is reviewed during office hours, so it is not the
+                fastest route out of hours.
               </p>
             </div>
 
@@ -147,6 +156,8 @@ export default function Home() {
                 Rockaway, New Jersey 07866
               </p>
               <p>
+                <a className="home-phone" href={OFFICE_PHONE_HREF}>{OFFICE_PHONE}</a>
+                <br />
                 <a href="mailto:office@townsquarevillagenj.com">
                   office@townsquarevillagenj.com
                 </a>
@@ -195,7 +206,9 @@ export default function Home() {
         <div className="home-footer-inner">
           <span>Townsquare Village HOA, Inc. &middot; Rockaway, New Jersey</span>
           <span>
-            <a href="mailto:office@townsquarevillagenj.com">Contact the office</a>
+            <a href={OFFICE_PHONE_HREF}>{OFFICE_PHONE}</a>
+            {' · '}
+            <a href="mailto:office@townsquarevillagenj.com">office@townsquarevillagenj.com</a>
           </span>
         </div>
       </footer>
