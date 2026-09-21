@@ -3,7 +3,7 @@ const express = require('express');
 const db = require('../db/connection');
 const schemas = require('../validators');
 const validate = require('../middleware/validate');
-const { authenticate, isStaff } = require('../middleware/auth');
+const { authenticate, isStaff, isManagement } = require('../middleware/auth');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const serialize = require('../utils/serialize');
@@ -181,6 +181,24 @@ router.patch('/:id', loadTicket, validate(schemas.updateTicket), asyncHandler(as
     ticket: serialize.ticket(updated),
     changed: changes.map((c) => c.field),
   });
+}));
+
+/**
+ * DELETE /api/tickets/:id
+ * Removes a ticket and everything hanging off it. Management only, and a last
+ * resort: cancelling a ticket keeps the record and the reason, which is what
+ * the resident and the audit trail want in almost every case. This is for the
+ * test row and the duplicate submission, which should never have existed.
+ *
+ * The comments and the audit trail go with it (ON DELETE CASCADE). The
+ * email_logs entry for each notification already sent survives without its
+ * ticket, so the record of what was sent to whom is not rewritten by this.
+ */
+router.delete('/:id', loadTicket, asyncHandler(async (req, res) => {
+  if (!isManagement(req.user)) throw AppError.forbidden('Only management can delete tickets');
+
+  await db.query('DELETE FROM tickets WHERE id = $1', [req.ticket.id]);
+  res.status(204).end();
 }));
 
 /**

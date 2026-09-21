@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { api, errorMessage } from '../api/client';
 import useMeta from '../hooks/useMeta';
@@ -41,7 +41,8 @@ function ActivityLine({ entry }) {
 
 export default function TicketDetail() {
   const { id } = useParams();
-  const { user, isStaff } = useAuth();
+  const navigate = useNavigate();
+  const { user, isStaff, isManagement } = useAuth();
   const { meta } = useMeta();
 
   const [ticket, setTicket] = useState(null);
@@ -53,6 +54,10 @@ export default function TicketDetail() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
+
+  // Deleting takes the comments and the audit trail with it, so the button
+  // arms a confirmation rather than acting on the first click.
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const [draft, setDraft] = useState('');
   const [draftInternal, setDraftInternal] = useState(false);
@@ -127,6 +132,21 @@ export default function TicketDetail() {
     }
   };
 
+  const handleDelete = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      await api.deleteTicket(id);
+      // The ticket this page is built on is gone, so there is nothing to
+      // refresh -- leave for the queue instead.
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setError(errorMessage(err, 'Could not delete the ticket'));
+      setBusy(false);
+      setConfirmingDelete(false);
+    }
+  };
+
   if (loading) return <Spinner center />;
 
   if (!ticket) {
@@ -158,7 +178,28 @@ export default function TicketDetail() {
             {ticket.unitNumber ? ` · ${ticket.unitNumber}` : ''}
           </p>
         </div>
-        <Link to="/dashboard"><button type="button" className="secondary">Back to list</button></Link>
+        <div className="rowactions">
+          <Link to="/dashboard"><button type="button" className="secondary">Back to list</button></Link>
+          {isManagement && (
+            confirmingDelete ? (
+              <>
+                <button type="button" className="danger" disabled={busy} onClick={handleDelete}>
+                  {busy ? 'Deleting...' : 'Delete for good'}
+                </button>
+                <button type="button" className="secondary" disabled={busy}
+                  onClick={() => setConfirmingDelete(false)}>
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button type="button" className="secondary" disabled={busy}
+                title="Remove this ticket, its comments and its history"
+                onClick={() => setConfirmingDelete(true)}>
+                Delete
+              </button>
+            )
+          )}
+        </div>
       </div>
 
       <Alert onDismiss={() => setError('')}>{error}</Alert>
