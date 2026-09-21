@@ -18,19 +18,26 @@ const DEFAULT_FILTERS = {
   page: 1,
 };
 
-// Quick views sit above the filter bar; each one just presets the filters.
+/**
+ * Quick views sit above the filter bar; each one presets the filters.
+ *
+ * None of them touch sort or order. Ordering is a separate question from which
+ * tickets you are looking at -- it used to be a view of its own ("Oldest
+ * first"), which meant choosing it silently threw away whatever else you had
+ * narrowed to, and there was no way to reverse any of the other views.
+ */
 const QUICK_VIEWS = [
-  { key: 'active', label: 'Active', patch: { status: '', assignedTo: '', open: true, sort: 'created_at', order: 'desc' } },
-  { key: 'unassigned', label: 'Unassigned', patch: { assignedTo: 'unassigned', open: true } },
-  { key: 'oldest', label: 'Oldest first', patch: { assignedTo: '', open: true, sort: 'created_at', order: 'asc' } },
-  { key: 'all', label: 'All tickets', patch: { assignedTo: '', open: undefined } },
+  { key: 'open', label: 'Open', patch: { status: '', assignedTo: '', open: true } },
+  { key: 'closed', label: 'Closed', patch: { status: '', assignedTo: '', open: false } },
+  { key: 'unassigned', label: 'Unassigned', patch: { status: '', assignedTo: 'unassigned', open: true } },
+  { key: 'all', label: 'All tickets', patch: { status: '', assignedTo: '', open: undefined } },
 ];
 
 export default function ManagementDashboard() {
   const { meta } = useMeta();
 
   const [filters, setFilters] = useState({ ...DEFAULT_FILTERS, open: true });
-  const [quickView, setQuickView] = useState('active');
+  const [quickView, setQuickView] = useState('open');
   const [data, setData] = useState({ tickets: [], pagination: null });
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,9 +54,10 @@ export default function ManagementDashboard() {
     setLoading(true);
     setError('');
     try {
-      // Drop empty filters so the API sees only what was actually chosen.
+      // Drop filters that were never chosen. `false` is a chosen value --
+      // open=false is what asks for closed tickets -- so only blanks go.
       const params = Object.fromEntries(
-        Object.entries(filters).filter(([, v]) => v !== '' && v !== false && v !== undefined),
+        Object.entries(filters).filter(([, v]) => v !== '' && v !== undefined),
       );
       params.limit = 25;
       setData(await api.listTickets(params));
@@ -161,11 +169,27 @@ export default function ManagementDashboard() {
 
           <div className="field">
             <label htmlFor="sort">Sort by</label>
-            <select id="sort" value={filters.sort} onChange={update('sort')}>
-              <option value="created_at">Newest first</option>
-              <option value="updated_at">Recently updated</option>
-              <option value="priority">Priority</option>
-            </select>
+            {/* The field and its direction are separate controls: naming the
+                field "Newest first" baked the direction into the label, so
+                reversing any other ordering was impossible. */}
+            <div className="sortrow">
+              <select id="sort" value={filters.sort} onChange={update('sort')}>
+                <option value="created_at">Date opened</option>
+                <option value="updated_at">Last updated</option>
+                <option value="priority">Priority</option>
+              </select>
+              <button
+                type="button"
+                className="secondary sortdir"
+                aria-label={filters.order === 'asc' ? 'Sorted oldest first' : 'Sorted newest first'}
+                title={filters.order === 'asc' ? 'Oldest first' : 'Newest first'}
+                onClick={() => setFilters((f) => ({
+                  ...f, order: f.order === 'asc' ? 'desc' : 'asc', page: 1,
+                }))}
+              >
+                {filters.order === 'asc' ? '\u2191' : '\u2193'}
+              </button>
+            </div>
           </div>
         </div>
       </div>

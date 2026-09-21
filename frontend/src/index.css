@@ -643,3 +643,8 @@ th.num { text-align: right; }
 /* The office number carries more weight than the text around it: on the
    emergency notice it is the thing someone is scanning for. */
 .home-phone { font-weight: 650; white-space: nowrap; }
+
+/* The sort field and its direction sit together: one control, two parts. */
+.sortrow { display: flex; gap: 6px; align-items: stretch; }
+.sortrow select { flex: 1 1 auto; min-width: 0; }
+.sortdir { flex: 0 0 auto; padding: 0 12px; font-size: 15px; line-height: 1; }
