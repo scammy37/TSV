@@ -16,9 +16,9 @@ npm run dev               # http://localhost:5000
 
 `npm run migrate -- --reset` drops every table first, for a clean rebuild.
 
-Email is optional. With `SMTP_HOST`/`SMTP_USER` blank the app runs normally and
+Email is optional. With no transport configured the app runs normally and
 records what it *would* have sent in `email_logs` with status `skipped`, so you
-can develop without a mail server.
+can develop without a mail server. See **Email transports** below.
 
 `npm run check:email` prints the configuration and proves the connection. Pass
 an address — `npm run check:email -- you@example.com` — and it sends a real
@@ -77,6 +77,42 @@ default), created and migrated automatically before the suite. They use the
 same `DB_HOST`/`DB_USER`/`DB_PASSWORD` as development and never touch `tsv_db`
 — a stray `DATABASE_URL` in the environment cannot point the suite at something
 real.
+
+## Email transports
+
+Two ways to send, picked automatically:
+
+| Set | Transport | When |
+|---|---|---|
+| `RESEND_API_KEY` | Resend, over HTTPS | A host that blocks outbound mail ports |
+| `SMTP_HOST` + `SMTP_USER` | SMTP, via nodemailer | Anywhere those ports are open |
+| Neither | none | Notifications logged `skipped`, nothing sent |
+
+`MAIL_FROM` sets the sender either way, falling back to `SMTP_FROM`.
+
+**Resend wins when both are set**, deliberately: a host that needs the HTTP API
+is a host where SMTP cannot work, so falling back to it would only produce
+timeouts.
+
+### Why an HTTP transport exists at all
+
+Several managed hosts block outbound SMTP entirely — Render's free tier among
+them, which is where this runs. The failure is a connection timeout on 587 and
+465 rather than a refusal or an auth error, so it reads like a credentials
+problem and is not one. No SMTP settings can fix it. An HTTPS request on 443
+goes out where those ports do not.
+
+`MAIL_FROM` must be on a domain verified with the provider, or the API rejects
+the send. Verifying a domain means adding DNS records; a provider that offers a
+sending *subdomain* (`send.example.com`) is worth preferring where the apex
+already has MX and SPF records for an existing mailbox, since it leaves them
+untouched — a second SPF record on the same name breaks both.
+
+The transport lives in `services/mailers/resend.js` and exposes `sendMail()`
+and `verify()`, the two methods `email.js` uses from a nodemailer transport, so
+the calling code does not know which it holds. `tests/email.test.js` exercises
+it against a local stand-in for the API: real requests, real status codes, no
+key and nothing delivered.
 
 ## Backups
 

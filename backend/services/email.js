@@ -3,24 +3,37 @@ const nodemailer = require('nodemailer');
 const config = require('../config');
 const db = require('../db/connection');
 const { PRIORITY_LABELS, STATUS_LABELS } = require('../constants');
+const resend = require('./mailers/resend');
 
 let transporter;
 let warnedUnconfigured = false;
 
-/** True when there is enough configuration to actually send mail. */
-const isConfigured = () => Boolean(config.smtp.host && config.smtp.user);
+/** True when there is enough configuration to actually send mail, either way. */
+const isConfigured = () => Boolean(config.resend.apiKey || (config.smtp.host && config.smtp.user));
+
+/** Which transport is in play, for log lines and `npm run check:email`. */
+const describeTransport = () => {
+  if (config.resend.apiKey) return 'Resend (HTTPS)';
+  if (config.smtp.host) return `SMTP ${config.smtp.host} as ${config.smtp.user}`;
+  return 'none';
+};
 
 // Built lazily so importing this module never opens a connection, and so tests
-// can run without any SMTP configuration at all.
+// can run with no mail configuration at all.
+//
+// Resend wins when both are set. A host that needs the HTTP API is a host where
+// SMTP cannot work, so falling back to it would only produce timeouts.
 const getTransporter = () => {
   if (!isConfigured()) return null;
   if (!transporter) {
-    transporter = nodemailer.createTransport({
-      host: config.smtp.host,
-      port: config.smtp.port,
-      secure: config.smtp.port === 465,
-      auth: { user: config.smtp.user, pass: config.smtp.pass },
-    });
+    transporter = config.resend.apiKey
+      ? resend.createMailer({ apiKey: config.resend.apiKey, apiBase: config.resend.apiBase })
+      : nodemailer.createTransport({
+        host: config.smtp.host,
+        port: config.smtp.port,
+        secure: config.smtp.port === 465,
+        auth: { user: config.smtp.user, pass: config.smtp.pass },
+      });
   }
   return transporter;
 };
@@ -179,14 +192,14 @@ const send = async (templateName, to, context = {}) => {
     const mailer = getTransporter();
     if (!mailer) {
       if (!warnedUnconfigured && !config.isTest) {
-        console.warn('SMTP is not configured -- notifications are logged, not sent.');
+        console.warn('No mail transport is configured -- notifications are logged, not sent.');
         warnedUnconfigured = true;
       }
       await logEmail({ ticketId: ticket?.id, to, subject, template: templateName, status: 'skipped' });
       return { status: 'skipped', subject };
     }
 
-    await mailer.sendMail({ from: config.smtp.from, to, subject, html: rendered.html });
+    await mailer.sendMail({ from: config.mail.from, to, subject, html: rendered.html });
     await logEmail({ ticketId: ticket?.id, to, subject, template: templateName, status: 'sent' });
     return { status: 'sent', subject };
   } catch (err) {
@@ -252,7 +265,11 @@ const notifyManagement = (templateName, context, { exclude = [] } = {}) => {
  */
 const verify = async () => {
   if (!isConfigured()) {
-    return { ok: false, configured: false, reason: 'SMTP_HOST and SMTP_USER are not set' };
+    return {
+      ok: false,
+      configured: false,
+      reason: 'No mail transport configured: set RESEND_API_KEY, or SMTP_HOST and SMTP_USER',
+    };
   }
   try {
     await getTransporter().verify();
@@ -271,15 +288,20 @@ const verifyAtStartup = async () => {
   const result = await verify();
 
   if (result.ok) {
-    console.log(`Email: connected to ${config.smtp.host} as ${config.smtp.user}`);
+    console.log(`Email: ready via ${describeTransport()}, sending as ${config.mail.from}`);
     return result;
   }
 
   if (!result.configured) {
-    const message = 'Email: SMTP is not configured. Notifications will be recorded '
-      + "in email_logs with status 'skipped' and never delivered.";
+    const message = 'Email: no mail transport is configured. Notifications will be '
+      + "recorded in email_logs with status 'skipped' and never delivered.";
     if (config.isProduction) {
-      console.error(`WARNING -- ${message} Set SMTP_HOST, SMTP_USER and SMTP_PASS.`);
+      console.error(
+        `WARNING -- ${message}\n`
+        + '          Set RESEND_API_KEY to send over HTTPS, which is the only option on a '
+        + 'host that blocks outbound SMTP,\n'
+        + '          or SMTP_HOST, SMTP_USER and SMTP_PASS where those ports are open.',
+      );
     } else if (!config.isTest) {
       console.warn(message);
     }
@@ -287,16 +309,19 @@ const verifyAtStartup = async () => {
   }
 
   console.error(
-    `WARNING -- Email: SMTP is configured but the connection failed: ${result.reason}\n`
-    + '          Notifications will be recorded as failed. Check SMTP_HOST, SMTP_PORT, '
-    + 'SMTP_USER and SMTP_PASS.\n'
-    + '          For Gmail, SMTP_PASS must be an App Password, not the account password.',
+    `WARNING -- Email: ${describeTransport()} is configured but failed: ${result.reason}\n`
+    + '          Notifications will be recorded as failed.\n'
+    + (config.resend.apiKey
+      ? '          Check RESEND_API_KEY, and that MAIL_FROM is on a domain verified in Resend.'
+      : '          Check SMTP_HOST, SMTP_PORT, SMTP_USER and SMTP_PASS. For Gmail, SMTP_PASS '
+        + 'must be an App Password.'),
   );
   return result;
 };
 
 module.exports = {
   send,
+  describeTransport,
   notify,
   notifyManagement,
   flush,

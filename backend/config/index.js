@@ -62,7 +62,25 @@ const config = {
     port: int(process.env.SMTP_PORT, 587),
     user: process.env.SMTP_USER || '',
     pass: process.env.SMTP_PASS || '',
-    from: process.env.SMTP_FROM || 'noreply@complexmanagement.com',
+    from: process.env.SMTP_FROM || 'noreply@townsquarevillagenj.com',
+  },
+
+  // Sending over HTTPS instead of SMTP, for hosts that block outbound mail
+  // ports -- which no SMTP credentials can work around, because the connection
+  // never opens. Set RESEND_API_KEY and this is used in preference to SMTP.
+  resend: {
+    apiKey: process.env.RESEND_API_KEY || '',
+    // Overridable so the integration test can point at a local stand-in. No
+    // deployment should ever set it.
+    apiBase: process.env.RESEND_API_BASE || 'https://api.resend.com',
+  },
+
+  // Who notifications come from, whichever transport carries them. Falls back
+  // to SMTP_FROM so an existing deployment keeps its configured sender.
+  mail: {
+    from: process.env.MAIL_FROM
+      || process.env.SMTP_FROM
+      || 'noreply@townsquarevillagenj.com',
   },
 
   bcryptRounds: int(process.env.BCRYPT_ROUNDS, env === 'test' ? 4 : 10),
