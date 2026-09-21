@@ -15,35 +15,27 @@ const db = require('../db/connection');
 async function main() {
   const recipient = process.argv[2];
 
-  console.log(`Transport: ${email.describeTransport()}`);
-  console.log(`From:      ${config.mail.from}`);
+  console.log(`SMTP host: ${config.smtp.host || '(not set)'}`);
+  console.log(`SMTP user: ${config.smtp.user || '(not set)'}`);
+  console.log(`From:      ${config.smtp.from}`);
   console.log('');
 
   const result = await email.verify();
 
   if (!result.configured) {
-    console.log('No mail transport is configured.');
+    console.log('SMTP is not configured.');
     console.log("Notifications are recorded in email_logs with status 'skipped' and never sent.");
-    console.log('');
-    console.log('Set RESEND_API_KEY to send over HTTPS -- the only option on a host that');
-    console.log('blocks outbound SMTP, which includes Render. MAIL_FROM must then be on a');
-    console.log('domain verified in Resend.');
-    console.log('Or set SMTP_HOST, SMTP_PORT, SMTP_USER and SMTP_PASS where those ports open.');
+    console.log('Set SMTP_HOST, SMTP_PORT, SMTP_USER and SMTP_PASS to enable delivery.');
     return 1;
   }
 
   if (!result.ok) {
-    console.error(`Check failed: ${result.reason}`);
-    if (config.resend.apiKey) {
-      console.error('A 401 means the API key is wrong or revoked.');
-      console.error('A timeout means outbound HTTPS to api.resend.com is blocked.');
-    } else {
-      console.error('For Gmail, SMTP_PASS must be an App Password, not the account password.');
-    }
+    console.error(`Connection failed: ${result.reason}`);
+    console.error('For Gmail, SMTP_PASS must be an App Password, not the account password.');
     return 1;
   }
 
-  console.log('Transport OK.');
+  console.log('Connection OK.');
 
   if (!recipient) {
     console.log('\nPass an address to send a real test message:');

@@ -25,7 +25,7 @@ homepage copy.
 - **Frontend**: React 18, React Router 6, Axios, plain CSS (light + dark)
 - **Backend**: Node.js, Express, JWT authentication, Joi validation
 - **Database**: PostgreSQL
-- **Email**: Resend over HTTPS, or nodemailer over SMTP (optional — the app runs without either)
+- **Email**: Nodemailer over SMTP (optional — the app runs without it)
 - **Tests**: Jest + supertest, against a real PostgreSQL database
 
 ## Features
@@ -134,10 +134,9 @@ Two things to do before real residents use it:
    silently by design, so an unconfigured or blocked mail server means nobody
    is ever notified of anything, and the emailed password reset never arrives.
    Several hosts — Render's free tier among them — block outbound SMTP
-   entirely, in which case no SMTP credentials will help: set `RESEND_API_KEY`
-   and `MAIL_FROM` instead and the app sends over HTTPS. Until either is
-   configured, management can hand out temporary passwords from the People
-   page.
+   entirely, in which case no SMTP credentials will help and the fix is a
+   provider with an HTTP API. Until then, management can hand out temporary
+   passwords from the People page.
 
 The app deliberately refuses to start under `NODE_ENV=production` with a
 missing, short or placeholder `JWT_SECRET`, no database configuration, or a
