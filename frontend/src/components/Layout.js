@@ -17,7 +17,10 @@ export default function Layout({ children }) {
     <div className="app">
       <header className="topbar">
         <div className="topbar-inner">
-          <Link to="/dashboard" className="brand">
+          {/* The association name goes to the association's front page, which
+              is what a name in a corner is taken to mean everywhere else. The
+              nav beside it already leads back into the portal. */}
+          <Link to="/" className="brand">
             <Logo size={30} />
             <span className="brand-text">Townsquare Village</span>
           </Link>
