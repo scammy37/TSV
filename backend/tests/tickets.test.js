@@ -314,6 +314,71 @@ describe('PATCH /api/tickets/:id', () => {
   });
 });
 
+describe('DELETE /api/tickets/:id', () => {
+  it('removes the ticket, its comments and its audit trail', async () => {
+    const ticket = await createTicket(homeowner);
+    await request(app).post(`/api/tickets/${ticket.id}/comments`)
+      .set('Authorization', manager.auth()).send({ comment: 'Looking into it now.' });
+
+    const res = await request(app).delete(`/api/tickets/${ticket.id}`)
+      .set('Authorization', manager.auth());
+    expect(res.status).toBe(204);
+
+    const gone = await request(app).get(`/api/tickets/${ticket.id}`)
+      .set('Authorization', manager.auth());
+    expect(gone.status).toBe(404);
+
+    const comments = await db.query('SELECT 1 FROM ticket_comments WHERE ticket_id = $1', [ticket.id]);
+    expect(comments.rowCount).toBe(0);
+    const trail = await db.query('SELECT 1 FROM ticket_activity WHERE ticket_id = $1', [ticket.id]);
+    expect(trail.rowCount).toBe(0);
+  });
+
+  it('keeps the record of emails already sent, detached from the ticket', async () => {
+    const ticket = await createTicket(homeowner);
+    await waitForEmail('ticket_id = $1', [ticket.id]);
+
+    await request(app).delete(`/api/tickets/${ticket.id}`).set('Authorization', manager.auth());
+
+    const { rows } = await db.query(
+      'SELECT ticket_id FROM email_logs WHERE recipient_email = $1', [homeowner.email],
+    );
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((r) => r.ticket_id === null)).toBe(true);
+  });
+
+  it('leaves the rest of the queue alone', async () => {
+    const [doomed, keeper] = [await createTicket(homeowner), await createTicket(otherHomeowner)];
+
+    await request(app).delete(`/api/tickets/${doomed.id}`).set('Authorization', manager.auth());
+
+    const res = await request(app).get('/api/tickets').set('Authorization', manager.auth());
+    expect(res.body.tickets.map((t) => t.id)).toEqual([keeper.id]);
+  });
+
+  it('is closed to staff and to the homeowner who filed it', async () => {
+    const ticket = await createTicket(homeowner);
+
+    const asStaff = await request(app).delete(`/api/tickets/${ticket.id}`)
+      .set('Authorization', staff.auth());
+    expect(asStaff.status).toBe(403);
+
+    const asOwner = await request(app).delete(`/api/tickets/${ticket.id}`)
+      .set('Authorization', homeowner.auth());
+    expect(asOwner.status).toBe(403);
+
+    const still = await request(app).get(`/api/tickets/${ticket.id}`)
+      .set('Authorization', manager.auth());
+    expect(still.status).toBe(200);
+  });
+
+  it('404s for a ticket that does not exist', async () => {
+    const res = await request(app).delete('/api/tickets/999999')
+      .set('Authorization', manager.auth());
+    expect(res.status).toBe(404);
+  });
+});
+
 describe('POST /api/tickets/:id/assign', () => {
   it('assigns and then unassigns a ticket', async () => {
     const ticket = await createTicket(homeowner);

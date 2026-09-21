@@ -70,6 +70,7 @@ export const api = {
   getTicket: (id) => client.get(`/tickets/${id}`).then((r) => r.data.ticket),
   updateTicket: (id, payload) => client.patch(`/tickets/${id}`, payload).then((r) => r.data.ticket),
   assignTicket: (id, assignedTo) => client.post(`/tickets/${id}/assign`, { assignedTo }).then((r) => r.data.ticket),
+  deleteTicket: (id) => client.delete(`/tickets/${id}`).then(() => undefined),
 
   listComments: (id) => client.get(`/tickets/${id}/comments`).then((r) => r.data.comments),
   addComment: (id, payload) => client.post(`/tickets/${id}/comments`, payload).then((r) => r.data.comment),
