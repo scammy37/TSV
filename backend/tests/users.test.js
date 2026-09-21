@@ -192,25 +192,57 @@ describe('POST /api/users/:id/reset-password', () => {
     expect(after.status).toBe(200);
   });
 
-  it('signs out sessions that predate the reset', async () => {
-    const jwt = require('jsonwebtoken');
-    const config = require('../config');
-
-    // Backdated rather than slept for: iat has whole-second resolution, so a
-    // token minted in this same second is meant to survive.
-    const stale = jwt.sign(
-      { sub: homeowner.id, role: homeowner.role, iat: Math.floor(Date.now() / 1000) - 60 },
-      config.jwt.secret,
-      { expiresIn: '7d' },
-    );
-    const before = await request(app).get('/api/tickets').set('Authorization', `Bearer ${stale}`);
+  it('signs out sessions opened before the reset', async () => {
+    const before = await request(app).get('/api/tickets').set('Authorization', homeowner.auth());
     expect(before.status).toBe(200);
 
     await request(app).post(`/api/users/${homeowner.id}/reset-password`)
       .set('Authorization', manager.auth());
 
-    const after = await request(app).get('/api/tickets').set('Authorization', `Bearer ${stale}`);
+    const after = await request(app).get('/api/tickets').set('Authorization', homeowner.auth());
     expect(after.status).toBe(401);
+  });
+
+  it('signs out a session opened in the same second as the change', async () => {
+    // The reason sessions are pinned to a counter rather than to a timestamp.
+    // JWT `iat` is whole seconds, so this token and the change that follows it
+    // are indistinguishable by time, and a time comparison has to let one of
+    // them through. Everything here happens well inside one second.
+    const { body } = await request(app)
+      .post(`/api/users/${homeowner.id}/reset-password`)
+      .set('Authorization', manager.auth());
+
+    const login = await request(app).post('/api/auth/login')
+      .send({ email: homeowner.email, password: body.temporaryPassword });
+    const tempSession = `Bearer ${login.body.token}`;
+
+    const changed = await request(app).post('/api/auth/change-password')
+      .set('Authorization', tempSession)
+      .send({ currentPassword: body.temporaryPassword, newPassword: 'AnotherPass1!' });
+    expect(changed.status).toBe(200);
+
+    // The session that did the changing is replaced, not preserved.
+    const reused = await request(app).get('/api/tickets').set('Authorization', tempSession);
+    expect(reused.status).toBe(401);
+
+    const fresh = await request(app).get('/api/tickets')
+      .set('Authorization', `Bearer ${changed.body.token}`);
+    expect(fresh.status).toBe(200);
+  });
+
+  it('leaves sessions alone that carry no generation, as pre-upgrade ones do', async () => {
+    const jwt = require('jsonwebtoken');
+    const config = require('../config');
+
+    // A token minted before token_version existed has no tv claim. It has to
+    // keep working, or deploying this would sign out every signed-in resident.
+    const legacy = jwt.sign(
+      { sub: homeowner.id, role: homeowner.role },
+      config.jwt.secret,
+      { expiresIn: '7d' },
+    );
+    const res = await request(app).get('/api/tickets').set('Authorization', `Bearer ${legacy}`);
+    expect(res.status).toBe(200);
   });
 
   it('invalidates an outstanding emailed reset link', async () => {

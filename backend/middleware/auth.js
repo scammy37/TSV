@@ -6,8 +6,11 @@ const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const { STAFF_ROLES, ROLES } = require('../constants');
 
+// tv pins the token to a generation of the account's password. Sign from the
+// row returned by the UPDATE that changed it, so the new token carries the new
+// generation and survives while its predecessors do not.
 const signToken = (user) => jwt.sign(
-  { sub: user.id, role: user.role },
+  { sub: user.id, role: user.role, tv: user.token_version ?? 0 },
   config.jwt.secret,
   { expiresIn: config.jwt.expiresIn },
 );
@@ -54,15 +57,14 @@ const authenticate = asyncHandler(async (req, res, next) => {
   // manager could reset the password of a compromised account and the intruder
   // would keep working for the remaining life of the token they already hold.
   //
-  // iat is whole seconds, and the row's timestamp has sub-second precision, so
-  // the comparison is made in seconds. Rounding the change down means a token
-  // minted in the same second as the change survives -- which is exactly what
-  // the reset endpoints need, since they sign a fresh token immediately after.
-  if (user.password_changed_at) {
-    const changedAtSeconds = Math.floor(new Date(user.password_changed_at).getTime() / 1000);
-    if (payload.iat < changedAtSeconds) {
-      throw AppError.unauthorized('Your password was changed, please sign in again');
-    }
+  // Compared against a counter rather than a timestamp on purpose: `iat` is
+  // whole seconds, so a token issued in the same second as the change cannot be
+  // told apart from one issued just before it, and a time comparison has to
+  // either kill the new token or spare the old one. Tokens predating this
+  // column carry no tv and read as generation 0, which is the default, so
+  // deploying it signs nobody out.
+  if ((payload.tv ?? 0) !== user.token_version) {
+    throw AppError.unauthorized('Your password was changed, please sign in again');
   }
 
   // An account on a temporary password can do exactly two things: read itself,

@@ -206,8 +206,17 @@ ALTER TABLE tickets ALTER COLUMN unit_number TYPE VARCHAR(120);
 --   must_change_password  forces that temporary password to be replaced before
 --                         the account can be used for anything else, so a
 --                         manager never keeps working knowledge of it;
---   password_changed_at   lets authenticate() reject tokens minted before the
---                         change, so a reset actually ends any session an
---                         intruder already had.
+--   token_version         is carried in every JWT and bumped on each password
+--                         change, so authenticate() can reject sessions opened
+--                         before it and a reset actually ends any session an
+--                         intruder already had;
+--   password_changed_at   is kept for the audit trail only -- it is deliberately
+--                         NOT what decides whether a token is still good. JWT
+--                         `iat` has whole-second resolution, so a token minted
+--                         in the same second as the change is indistinguishable
+--                         from one minted just before it, and any comparison
+--                         against a timestamp has to let one of the two through.
+--                         A counter has no such ambiguity.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0;

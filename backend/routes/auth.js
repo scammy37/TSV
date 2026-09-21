@@ -108,7 +108,8 @@ router.post('/reset-password', validate(schemas.resetPassword), asyncHandler(asy
   const passwordHash = await bcrypt.hash(req.body.password, config.bcryptRounds);
   const { rows } = await db.query(
     `UPDATE users
-     SET password_hash = $1, must_change_password = false, password_changed_at = now()
+     SET password_hash = $1, must_change_password = false, password_changed_at = now(),
+         token_version = token_version + 1
      WHERE id = $2
      RETURNING *`,
     [passwordHash, user.id],
@@ -160,7 +161,8 @@ router.post('/change-password', authenticate, validate(schemas.changePassword), 
   const passwordHash = await bcrypt.hash(req.body.newPassword, config.bcryptRounds);
   const { rows } = await db.query(
     `UPDATE users
-     SET password_hash = $1, must_change_password = false, password_changed_at = now()
+     SET password_hash = $1, must_change_password = false, password_changed_at = now(),
+         token_version = token_version + 1
      WHERE id = $2
      RETURNING *`,
     [passwordHash, req.user.id],
