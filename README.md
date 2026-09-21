@@ -25,7 +25,7 @@ homepage copy.
 - **Frontend**: React 18, React Router 6, Axios, plain CSS (light + dark)
 - **Backend**: Node.js, Express, JWT authentication, Joi validation
 - **Database**: PostgreSQL
-- **Email**: Nodemailer over SMTP (optional — the app runs without it)
+- **Email**: Resend over HTTPS, or nodemailer over SMTP (optional — the app runs without either)
 - **Tests**: Jest + supertest, against a real PostgreSQL database
 
 ## Features
@@ -43,8 +43,9 @@ run by Taylor Management. One obvious call to action — submit a request.
 - Comment back and forth with management
 - Correct a request's details until it is resolved, closed or cancelled
 - Full history of everything that happened to it
-- Email notification on submission, status change, reply and resolution
-  *(only where SMTP is configured — see the warning under Deploying)*
+- Email notification on submission, status change, reply and closure, sent
+  from an address that is not monitored — the request itself is where replies
+  belong, so a resident's answer cannot end up detached from it
 
 ### Staff and management
 
@@ -130,12 +131,17 @@ in one step; the same build and run commands work on any host that provides
 Two things to do before real residents use it:
 
 1. **Create the first manager** with `npm run create-admin`, not the demo seed.
-2. **Prove email works** with `npm run check:email`. Notifications fail
-   silently by design, so an unconfigured or blocked mail server means nobody
-   is ever notified of anything, and the emailed password reset never arrives.
-   Several hosts — Render's free tier among them — block outbound SMTP
-   entirely, in which case no SMTP credentials will help and the fix is a
-   provider with an HTTP API. Until then, management can hand out temporary
+2. **Configure email and prove it works.** Notifications fail silently by
+   design, so with no working transport nobody is ever notified of anything
+   and the emailed password reset never arrives.
+
+   Several hosts block outbound SMTP entirely. Render does: every port and
+   provider tried from there timed out, which is the connection never opening
+   rather than a credential being refused, so no mail account can fix it.
+   Set `RESEND_API_KEY` and `MAIL_FROM` and the app sends over HTTPS instead.
+   See [`backend/README.md`](backend/README.md#email-transports).
+
+   Until either transport is configured, management can hand out temporary
    passwords from the People page.
 
 The app deliberately refuses to start under `NODE_ENV=production` with a

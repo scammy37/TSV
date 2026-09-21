@@ -16,9 +16,9 @@ npm run dev               # http://localhost:5000
 
 `npm run migrate -- --reset` drops every table first, for a clean rebuild.
 
-Email is optional. With `SMTP_HOST`/`SMTP_USER` blank the app runs normally and
+Email is optional. With no transport configured the app runs normally and
 records what it *would* have sent in `email_logs` with status `skipped`, so you
-can develop without a mail server.
+can develop without a mail server. See **Email transports** below.
 
 `npm run check:email` prints the configuration and proves the connection. Pass
 an address — `npm run check:email -- you@example.com` — and it sends a real
@@ -105,6 +105,46 @@ both versions up front and says which to install, rather than letting
 
 The free tier on most hosts takes no backups at all, and Render deletes free
 databases outright at 90 days. Run this before any plan change or migration.
+
+## Email transports
+
+Two ways to send, picked automatically:
+
+| Set | Transport |
+|---|---|
+| `RESEND_API_KEY` | Resend, over HTTPS |
+| `SMTP_HOST` + `SMTP_USER` | SMTP, via nodemailer |
+| Neither | none — notifications logged `skipped` |
+
+Resend wins when both are set: a host that needs the HTTP API is one where
+SMTP only times out, so falling back would achieve nothing.
+
+### Why the HTTP transport exists
+
+Render blocks outbound SMTP. Gmail on 587 and 465 and IONOS on 587 all failed
+there as a connection timeout — the port never opening, rather than a
+credential being refused — so no mail account or password can fix it. An HTTPS
+request on 443 goes out where those do not.
+
+`MAIL_FROM` must be on a domain verified with the provider. Resend verifies at
+the apex via a `resend._domainkey` DKIM record and puts its own SPF on a
+`send.` subdomain, which leaves an existing apex MX and SPF untouched — so a
+domain already receiving mail elsewhere keeps working.
+
+**Issue a sending-only API key.** It can do nothing but send, so a leak cannot
+be used to read the account or re-point the domain. Resend refuses to list
+domains for such a key and answers with **401** — the same status it uses for a
+key that is simply wrong — so the transport tells them apart by the message,
+not the status, and reports a correctly scoped key as valid rather than broken.
+
+### Who mail comes from
+
+`MAIL_FROM` is deliberately an unmonitored address, and every notification says
+so. Replies belong on the request, where they stay with its history and are
+seen by whoever picks it up next; a reply to the notification would land in
+some inbox detached from the ticket. `OFFICE_EMAIL` is quoted instead in the
+few emails that have no request to point at, so nobody is left with no way to
+reach a person.
 
 ## Roles
 
