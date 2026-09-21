@@ -1,0 +1,16 @@
+# The homepage is public and worth indexing. Everything else is the resident
+# portal: it needs a login, so a crawler fetching it only ever reaches the
+# sign-in page, which is not what anyone searching for the association wants
+# to find.
+User-agent: *
+Allow: /$
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /forgot-password
+Disallow: /login
+Disallow: /profile
+Disallow: /register
+Disallow: /reports
+Disallow: /reset-password
+Disallow: /tickets
+Disallow: /users
