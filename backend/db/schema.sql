@@ -199,3 +199,15 @@ ALTER TABLE tickets DROP COLUMN IF EXISTS sla_deadline;
 -- the table, and re-running these is a no-op.
 ALTER TABLE users ALTER COLUMN unit_number TYPE VARCHAR(120);
 ALTER TABLE tickets ALTER COLUMN unit_number TYPE VARCHAR(120);
+
+-- Management can hand a resident a temporary password when they are locked out
+-- (the emailed reset link is useless until SMTP works). Two columns support it:
+--
+--   must_change_password  forces that temporary password to be replaced before
+--                         the account can be used for anything else, so a
+--                         manager never keeps working knowledge of it;
+--   password_changed_at   lets authenticate() reject tokens minted before the
+--                         change, so a reset actually ends any session an
+--                         intruder already had.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ;

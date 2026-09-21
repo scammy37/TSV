@@ -10,6 +10,9 @@ const publicUser = (row) => {
     unitNumber: row.unit_number ?? null,
     phone: row.phone ?? null,
     isActive: row.is_active,
+    // Drives the forced change-password screen; the client has no other way to
+    // know the account is on a temporary password.
+    mustChangePassword: Boolean(row.must_change_password),
     createdAt: row.created_at,
   };
 };

@@ -5,7 +5,7 @@ import Alert from '../components/Alert';
 import { useAuth } from '../context/AuthContext';
 
 export default function Profile() {
-  const { user, setUser } = useAuth();
+  const { user, setUser, adoptSession } = useAuth();
 
   const [profile, setProfile] = useState({
     firstName: user?.firstName || '',
@@ -36,9 +36,16 @@ export default function Profile() {
     event.preventDefault();
     setPasswordState({ error: '', notice: '', busy: true });
     try {
-      await api.changePassword(passwords);
+      // The API returns a fresh token: changing the password invalidates every
+      // session that predates it, including the one making this request.
+      const { token, user: updated } = await api.changePassword(passwords);
+      if (token) adoptSession(token, updated);
       setPasswords({ currentPassword: '', newPassword: '' });
-      setPasswordState({ error: '', notice: 'Password updated', busy: false });
+      setPasswordState({
+        error: '',
+        notice: 'Password updated. Any other device you were signed in on has been signed out.',
+        busy: false,
+      });
     } catch (err) {
       setPasswordState({ error: errorMessage(err, 'Could not change the password'), notice: '', busy: false });
     }

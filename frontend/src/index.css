@@ -633,3 +633,22 @@ th.num { text-align: right; }
 }
 .home-urgent p { margin: 0; color: var(--text); font-size: 14.2px; line-height: 1.6; }
 .home-urgent p + p { margin-top: 8px; }
+
+/* The people table's row controls, and the inline confirm that replaces them
+   while a password reset is being agreed to. */
+.rowactions { display: flex; gap: 8px; justify-content: flex-end; }
+.rowconfirm {
+  display: flex; gap: 10px; align-items: center; justify-content: flex-end;
+  flex-wrap: wrap; font-size: 13px; color: var(--text-muted);
+}
+/* The two buttons stay on one line whatever the prompt does, so Cancel never
+   ends up orphaned under Reset. */
+.rowconfirm-actions { display: flex; gap: 8px; flex: 0 0 auto; }
+
+/* A temporary password is read aloud or typed by hand, so it is set large and
+   loosely tracked, and selects as one word on click. */
+.temp-password {
+  font-size: 22px; letter-spacing: 2px; padding: 10px 16px;
+  background: var(--surface-alt); border: 1px solid var(--border);
+  border-radius: 6px; user-select: all;
+}

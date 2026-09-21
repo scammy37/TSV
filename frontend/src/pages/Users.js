@@ -23,6 +23,13 @@ export default function Users() {
   const [notice, setNotice] = useState('');
   const [busyId, setBusyId] = useState(null);
 
+  // Which account is awaiting confirmation of a reset, and the credential
+  // handed back by the last one. `issued` holds the only copy of that password
+  // that will ever exist, so it stays on screen until dismissed.
+  const [confirmingReset, setConfirmingReset] = useState(null);
+  const [issued, setIssued] = useState(null);
+  const [copied, setCopied] = useState(false);
+
   const [search, setSearch] = useState('');
   useEffect(() => {
     const timer = setTimeout(() => setFilters((f) => ({ ...f, q: search })), 300);
@@ -59,6 +66,36 @@ export default function Users() {
       setError(errorMessage(err, 'Could not update that account'));
     } finally {
       setBusyId(null);
+    }
+  };
+
+  const resetPassword = async (target) => {
+    setBusyId(target.id);
+    setError('');
+    setNotice('');
+    setIssued(null);
+    setCopied(false);
+    try {
+      const { user: updated, temporaryPassword } = await api.resetUserPassword(target.id);
+      setUsers((current) => current.map((u) => (u.id === target.id ? updated : u)));
+      setIssued({ fullName: target.fullName, password: temporaryPassword });
+    } catch (err) {
+      setError(errorMessage(err, 'Could not reset that password'));
+    } finally {
+      setBusyId(null);
+      setConfirmingReset(null);
+    }
+  };
+
+  const copyPassword = async () => {
+    try {
+      await navigator.clipboard.writeText(issued.password);
+      setCopied(true);
+    } catch {
+      // Clipboard access is refused outside a secure context and in some
+      // browsers. The password is on screen either way, so this is not worth
+      // an error -- the manager can select it by hand.
+      setCopied(false);
     }
   };
 
@@ -99,6 +136,32 @@ export default function Users() {
       <Alert onDismiss={() => setError('')}>{error}</Alert>
       <Alert kind="success" onDismiss={() => setNotice('')}>{notice}</Alert>
 
+      {issued && (
+        <div className="card" style={{ marginBottom: 16, borderColor: 'var(--accent)' }}>
+          <h3 style={{ marginTop: 0 }}>Temporary password for {issued.fullName}</h3>
+          <p style={{ color: 'var(--text-muted)' }}>
+            Read this out or hand it over now. It is not stored anywhere and
+            cannot be shown again &mdash; if it is lost, reset the password once more.
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <code className="temp-password">
+              {issued.password}
+            </code>
+            <button type="button" className="secondary sm" onClick={copyPassword}>
+              {copied ? 'Copied' : 'Copy'}
+            </button>
+            <button type="button" className="secondary sm" onClick={() => setIssued(null)}>
+              Done
+            </button>
+          </div>
+          <p className="field-hint" style={{ marginTop: 12 }}>
+            They will be asked to choose their own password the first time they
+            sign in with it, and any device they were already signed in on has
+            been signed out.
+          </p>
+        </div>
+      )}
+
       {loading ? <Spinner center /> : users.length === 0 ? (
         <div className="card"><EmptyState title="Nobody matches">Try a different search.</EmptyState></div>
       ) : (
@@ -124,6 +187,12 @@ export default function Users() {
                         {u.fullName}
                         {isSelf && <span style={{ color: 'var(--text-faint)' }}> (you)</span>}
                         {!u.isActive && <span className="badge badge-overdue" style={{ marginLeft: 8 }}>Deactivated</span>}
+                        {u.mustChangePassword && (
+                          <span className="badge badge-internal" style={{ marginLeft: 8 }}
+                            title="Issued a temporary password they have not replaced yet">
+                            Temporary password
+                          </span>
+                        )}
                       </td>
                       <td>{u.email}</td>
                       <td>{u.unitNumber || '--'}</td>
@@ -140,16 +209,50 @@ export default function Users() {
                       </td>
                       <td>{formatRelative(u.createdAt)}</td>
                       <td>
-                        <button
-                          type="button"
-                          className={u.isActive ? 'secondary sm' : 'sm'}
-                          disabled={busyId === u.id || isSelf}
-                          title={isSelf ? 'You cannot deactivate your own account' : undefined}
-                          onClick={() => patch(u.id, { isActive: !u.isActive },
-                            `${u.fullName} ${u.isActive ? 'deactivated' : 'reactivated'}`)}
-                        >
-                          {u.isActive ? 'Deactivate' : 'Reactivate'}
-                        </button>
+                        {confirmingReset === u.id ? (
+                          <div className="rowconfirm">
+                            <span>
+                              Reset {u.fullName}&rsquo;s password? They will be
+                              signed out everywhere.
+                            </span>
+                            <span className="rowconfirm-actions">
+                              <button type="button" className="sm" disabled={busyId === u.id}
+                                onClick={() => resetPassword(u)}>
+                                {busyId === u.id ? 'Resetting...' : 'Reset'}
+                              </button>
+                              <button type="button" className="secondary sm" disabled={busyId === u.id}
+                                onClick={() => setConfirmingReset(null)}>
+                                Cancel
+                              </button>
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="rowactions">
+                            <button
+                              type="button"
+                              className="secondary sm"
+                              disabled={busyId === u.id || isSelf || !u.isActive}
+                              title={
+                                isSelf ? 'Change your own password from your profile'
+                                  : !u.isActive ? 'Reactivate the account first'
+                                    : 'Issue a temporary password'
+                              }
+                              onClick={() => { setConfirmingReset(u.id); setIssued(null); }}
+                            >
+                              Reset password
+                            </button>
+                            <button
+                              type="button"
+                              className={u.isActive ? 'secondary sm' : 'sm'}
+                              disabled={busyId === u.id || isSelf}
+                              title={isSelf ? 'You cannot deactivate your own account' : undefined}
+                              onClick={() => patch(u.id, { isActive: !u.isActive },
+                                `${u.fullName} ${u.isActive ? 'deactivated' : 'reactivated'}`)}
+                            >
+                              {u.isActive ? 'Deactivate' : 'Reactivate'}
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );

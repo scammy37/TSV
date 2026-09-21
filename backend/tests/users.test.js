@@ -127,3 +127,128 @@ describe('GET /api/meta', () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe('POST /api/users/:id/reset-password', () => {
+  it('issues a working temporary password and retires the old one', async () => {
+    const res = await request(app)
+      .post(`/api/users/${homeowner.id}/reset-password`)
+      .set('Authorization', manager.auth());
+
+    expect(res.status).toBe(200);
+    expect(res.body.temporaryPassword).toEqual(expect.any(String));
+    expect(res.body.user.mustChangePassword).toBe(true);
+
+    const withOld = await request(app).post('/api/auth/login')
+      .send({ email: homeowner.email, password: homeowner.password });
+    expect(withOld.status).toBe(401);
+
+    const withTemp = await request(app).post('/api/auth/login')
+      .send({ email: homeowner.email, password: res.body.temporaryPassword });
+    expect(withTemp.status).toBe(200);
+    expect(withTemp.body.user.mustChangePassword).toBe(true);
+  });
+
+  it('never returns the same temporary password twice', async () => {
+    const seen = new Set();
+    for (let i = 0; i < 5; i += 1) {
+      // eslint-disable-next-line no-await-in-loop
+      const res = await request(app)
+        .post(`/api/users/${homeowner.id}/reset-password`)
+        .set('Authorization', manager.auth());
+      seen.add(res.body.temporaryPassword);
+    }
+    expect(seen.size).toBe(5);
+  });
+
+  it('confines the account to changing its password until it does', async () => {
+    const { body } = await request(app)
+      .post(`/api/users/${homeowner.id}/reset-password`)
+      .set('Authorization', manager.auth());
+
+    const login = await request(app).post('/api/auth/login')
+      .send({ email: homeowner.email, password: body.temporaryPassword });
+    const auth = `Bearer ${login.body.token}`;
+
+    // Everything else is refused...
+    const tickets = await request(app).get('/api/tickets').set('Authorization', auth);
+    expect(tickets.status).toBe(403);
+    const profile = await request(app).patch('/api/auth/me')
+      .set('Authorization', auth).send({ firstName: 'Nope' });
+    expect(profile.status).toBe(403);
+
+    // ...except reading itself, which the client needs to render the screen.
+    const me = await request(app).get('/api/auth/me').set('Authorization', auth);
+    expect(me.status).toBe(200);
+
+    const changed = await request(app).post('/api/auth/change-password')
+      .set('Authorization', auth)
+      .send({ currentPassword: body.temporaryPassword, newPassword: 'BrandNewPass1!' });
+    expect(changed.status).toBe(200);
+    expect(changed.body.user.mustChangePassword).toBe(false);
+
+    // The token handed back by the change is a working session.
+    const after = await request(app).get('/api/tickets')
+      .set('Authorization', `Bearer ${changed.body.token}`);
+    expect(after.status).toBe(200);
+  });
+
+  it('signs out sessions that predate the reset', async () => {
+    const jwt = require('jsonwebtoken');
+    const config = require('../config');
+
+    // Backdated rather than slept for: iat has whole-second resolution, so a
+    // token minted in this same second is meant to survive.
+    const stale = jwt.sign(
+      { sub: homeowner.id, role: homeowner.role, iat: Math.floor(Date.now() / 1000) - 60 },
+      config.jwt.secret,
+      { expiresIn: '7d' },
+    );
+    const before = await request(app).get('/api/tickets').set('Authorization', `Bearer ${stale}`);
+    expect(before.status).toBe(200);
+
+    await request(app).post(`/api/users/${homeowner.id}/reset-password`)
+      .set('Authorization', manager.auth());
+
+    const after = await request(app).get('/api/tickets').set('Authorization', `Bearer ${stale}`);
+    expect(after.status).toBe(401);
+  });
+
+  it('invalidates an outstanding emailed reset link', async () => {
+    await request(app).post('/api/auth/forgot-password').send({ email: homeowner.email });
+    const { rows } = await db.query(
+      'SELECT * FROM password_reset_tokens WHERE user_id = $1 AND used_at IS NULL',
+      [homeowner.id],
+    );
+    expect(rows).toHaveLength(1);
+
+    await request(app).post(`/api/users/${homeowner.id}/reset-password`)
+      .set('Authorization', manager.auth());
+
+    const { rows: after } = await db.query(
+      'SELECT * FROM password_reset_tokens WHERE user_id = $1 AND used_at IS NULL',
+      [homeowner.id],
+    );
+    expect(after).toHaveLength(0);
+  });
+
+  it('is closed to homeowners and to staff', async () => {
+    for (const actor of [homeowner, staff]) {
+      // eslint-disable-next-line no-await-in-loop
+      const res = await request(app).post(`/api/users/${homeowner.id}/reset-password`)
+        .set('Authorization', actor.auth());
+      expect(res.status).toBe(403);
+    }
+  });
+
+  it('refuses to reset the caller\'s own password', async () => {
+    const res = await request(app).post(`/api/users/${manager.id}/reset-password`)
+      .set('Authorization', manager.auth());
+    expect(res.status).toBe(400);
+  });
+
+  it('404s for an account that does not exist', async () => {
+    const res = await request(app).post('/api/users/999999/reset-password')
+      .set('Authorization', manager.auth());
+    expect(res.status).toBe(404);
+  });
+});

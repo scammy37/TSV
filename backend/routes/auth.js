@@ -106,10 +106,17 @@ router.post('/reset-password', validate(schemas.resetPassword), asyncHandler(asy
   }
 
   const passwordHash = await bcrypt.hash(req.body.password, config.bcryptRounds);
-  await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, user.id]);
+  const { rows } = await db.query(
+    `UPDATE users
+     SET password_hash = $1, must_change_password = false, password_changed_at = now()
+     WHERE id = $2
+     RETURNING *`,
+    [passwordHash, user.id],
+  );
 
-  // Signing in immediately saves a round trip and proves the reset worked.
-  const { rows } = await db.query('SELECT * FROM users WHERE id = $1', [user.id]);
+  // Signing in immediately saves a round trip and proves the reset worked. The
+  // new token postdates password_changed_at, so it survives while every session
+  // opened before the reset is rejected from here on.
   res.json({ token: signToken(rows[0]), user: publicUser(rows[0]) });
 }));
 
@@ -151,9 +158,18 @@ router.post('/change-password', authenticate, validate(schemas.changePassword), 
   if (!matches) throw AppError.badRequest('Current password is incorrect');
 
   const passwordHash = await bcrypt.hash(req.body.newPassword, config.bcryptRounds);
-  await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, req.user.id]);
+  const { rows } = await db.query(
+    `UPDATE users
+     SET password_hash = $1, must_change_password = false, password_changed_at = now()
+     WHERE id = $2
+     RETURNING *`,
+    [passwordHash, req.user.id],
+  );
 
-  res.json({ message: 'Password updated' });
+  // Changing a password signs out every other session. A fresh token keeps the
+  // one doing the changing alive -- without it the caller would be logged out
+  // by their own successful request.
+  res.json({ message: 'Password updated', token: signToken(rows[0]), user: publicUser(rows[0]) });
 }));
 
 module.exports = router;

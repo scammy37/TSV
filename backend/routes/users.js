@@ -1,5 +1,7 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 
+const config = require('../config');
 const db = require('../db/connection');
 const schemas = require('../validators');
 const validate = require('../middleware/validate');
@@ -8,6 +10,7 @@ const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const { publicUser } = require('../utils/serialize');
 const { ROLES } = require('../constants');
+const tempPassword = require('../services/tempPassword');
 
 const router = express.Router();
 
@@ -118,6 +121,67 @@ router.patch('/:id', authorize(ROLES.MANAGEMENT), validate(schemas.idParam, 'par
     if (!rows[0]) throw AppError.notFound('User not found');
 
     res.json({ user: publicUser(rows[0]) });
+  }));
+
+/**
+ * POST /api/users/:id/reset-password
+ * Sets a temporary password and returns it once, for a manager to pass to the
+ * resident in person or over the phone.
+ *
+ * This exists because the self-service route -- an emailed reset link -- cannot
+ * be relied on: the host blocks outbound SMTP, so a resident who forgets their
+ * password has no way back into the account on their own.
+ *
+ * Three things keep that from being a back door into anyone's account:
+ *
+ *   - the password is generated here, never chosen by the manager, so it cannot
+ *     be set to something the manager already knows the resident uses elsewhere;
+ *   - must_change_password forces it to be replaced at next sign-in, so the
+ *     manager's knowledge of it expires the moment it is used;
+ *   - password_changed_at invalidates sessions opened before the reset, so this
+ *     is also the tool for shutting an intruder out.
+ *
+ * The plaintext is in the response body and nowhere else. It is deliberately
+ * not logged, not emailed and not stored.
+ */
+router.post('/:id/reset-password', authorize(ROLES.MANAGEMENT), validate(schemas.idParam, 'params'),
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+
+    // A manager resetting themselves would be locked into the change-password
+    // screen on their next request, for no benefit -- they can already change
+    // their own password from their profile.
+    if (id === req.user.id) {
+      throw AppError.badRequest('Change your own password from your profile instead');
+    }
+
+    const password = tempPassword.generate();
+    const passwordHash = await bcrypt.hash(password, config.bcryptRounds);
+
+    const { rows } = await db.transaction(async (client) => {
+      const updated = await client.query(
+        `UPDATE users
+         SET password_hash = $1, must_change_password = true, password_changed_at = now()
+         WHERE id = $2
+         RETURNING *`,
+        [passwordHash, id],
+      );
+
+      // An outstanding emailed link would otherwise still work and let whoever
+      // holds it set a password of their own choosing.
+      if (updated.rowCount > 0) {
+        await client.query(
+          'UPDATE password_reset_tokens SET used_at = now() WHERE user_id = $1 AND used_at IS NULL',
+          [id],
+        );
+      }
+
+      return updated;
+    });
+
+    if (!rows[0]) throw AppError.notFound('User not found');
+
+    res.json({ user: publicUser(rows[0]), temporaryPassword: password });
   }));
 
 module.exports = router;

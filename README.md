@@ -43,6 +43,7 @@ assigns, and resolves them against SLA targets.
 ### Core
 - Role-based access control (homeowner / staff / management), enforced in the API
 - Self-service password reset, with single-use hashed tokens that expire in an hour
+- Management-issued temporary passwords for residents who are locked out, forced to be replaced at first sign-in (the way back in where outbound SMTP is blocked)
 - JWT authentication; deactivating an account invalidates its token immediately
 - Enforced status transitions, so the audit trail cannot contain nonsense
 - SLA deadlines by priority, measured from when the ticket was filed

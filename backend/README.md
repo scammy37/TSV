@@ -66,7 +66,7 @@ and `/api/auth/register` requires `Authorization: Bearer <token>`.
 | POST | `/auth/login` | Returns `{ token, user }` |
 | GET | `/auth/me` | Current user |
 | PATCH | `/auth/me` | Update name, address, phone |
-| POST | `/auth/change-password` | Requires the current password |
+| POST | `/auth/change-password` | Requires the current password; returns a fresh `{ token, user }` because the change signs out every other session |
 
 ### Tickets
 | Method | Path | Notes |
@@ -86,8 +86,32 @@ and `/api/auth/register` requires `Authorization: Bearer <token>`.
 | GET | `/meta` | Categories, priorities and statuses with their legal transitions |
 | GET | `/users/assignable` | Staff directory with open workload; staff only |
 | GET | `/users`, `GET /users/:id`, `PATCH /users/:id` | Management only |
+| POST | `/users/:id/reset-password` | Management only. Returns `{ user, temporaryPassword }`; the plaintext appears in this response and nowhere else |
 | GET | `/reports/summary` | Volume, SLA and workload figures; staff only |
 | GET | `/health` | Public |
+
+## Getting a locked-out resident back in
+
+The emailed reset link is the normal route, but it only works where outbound
+SMTP does -- which rules out several managed hosts, Render among them. So
+management can issue a temporary password directly, from **People -> Reset
+password**.
+
+What that does, and why:
+
+| | |
+|---|---|
+| The password is generated, not chosen | A manager cannot set it to something they know the resident uses elsewhere |
+| `must_change_password` is set | The account can do nothing but replace it, so the manager's knowledge of it dies at first use |
+| `password_changed_at` is stamped | Every session opened before the reset is rejected, making this the tool for shutting out an intruder too |
+| Outstanding reset tokens are consumed | An emailed link already in flight cannot be used to set a password of someone else's choosing |
+
+The plaintext is returned once, in the response body. It is not logged, not
+emailed and not stored -- if it is lost before it reaches the resident, issue
+another one.
+
+`password_changed_at` is null for accounts that predate this feature, so
+deploying it does not sign anybody out.
 
 ## Ticket lifecycle
 
