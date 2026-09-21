@@ -9,9 +9,18 @@ import { formatRelative } from '../utils/format';
 
 const ROLES = [
   { value: 'homeowner', label: 'Homeowner' },
-  { value: 'staff', label: 'Maintenance staff' },
   { value: 'management', label: 'Management' },
 ];
+
+// Roles the portal no longer hands out. The backend still understands them, so
+// an account created before they were dropped keeps working; the row for one
+// offers its own role alongside the current list rather than rendering a select
+// with nothing matching, which would read as though they were someone else.
+const RETIRED_ROLE_LABELS = { staff: 'Maintenance staff' };
+
+const roleOptions = (role) => (ROLES.some((r) => r.value === role)
+  ? ROLES
+  : [...ROLES, { value: role, label: RETIRED_ROLE_LABELS[role] || role }]);
 
 export default function Users() {
   const { user: currentUser } = useAuth();
@@ -127,7 +136,7 @@ export default function Users() {
       <div className="page-head">
         <div>
           <h1>People</h1>
-          <p>Homeowners, maintenance staff and managers with access to the portal.</p>
+          <p>Homeowners and managers with access to the portal.</p>
         </div>
       </div>
 
@@ -227,7 +236,7 @@ export default function Users() {
                           onChange={(e) => patch(u.id, { role: e.target.value },
                             `${u.fullName} is now ${e.target.value}`)}
                         >
-                          {ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                          {roleOptions(u.role).map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                         </select>
                       </td>
                       <td>{formatRelative(u.createdAt)}</td>
