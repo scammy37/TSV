@@ -22,7 +22,6 @@ const DEFAULT_FILTERS = {
 const QUICK_VIEWS = [
   { key: 'active', label: 'Active', patch: { status: '', assignedTo: '', open: true, sort: 'created_at', order: 'desc' } },
   { key: 'unassigned', label: 'Unassigned', patch: { assignedTo: 'unassigned', open: true } },
-  { key: 'mine', label: 'Assigned to me', patch: { assignedTo: 'me', open: true } },
   { key: 'oldest', label: 'Oldest first', patch: { assignedTo: '', open: true, sort: 'created_at', order: 'asc' } },
   { key: 'all', label: 'All tickets', patch: { assignedTo: '', open: undefined } },
 ];
