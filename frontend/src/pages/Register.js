@@ -89,7 +89,6 @@ export default function Register() {
               <label htmlFor="role">Account type</label>
               <select id="role" value={form.role} onChange={update('role')}>
                 <option value="homeowner">Homeowner</option>
-                <option value="staff">Maintenance staff</option>
                 <option value="management">Management</option>
               </select>
             </div>
