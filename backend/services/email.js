@@ -301,11 +301,27 @@ const verifyAtStartup = async () => {
     return result;
   }
 
+  // Name what was attempted. Without the host and port in this line there is
+  // no way to tell from a log whether a change to either actually took effect,
+  // which turns every diagnosis into guesswork about the dashboard.
+  const target = `${config.smtp.host}:${config.smtp.port}`;
+  const timedOut = /timeout|ETIMEDOUT|ECONNREFUSED/i.test(result.reason || '');
+
   console.error(
-    `WARNING -- Email: SMTP is configured but the connection failed: ${result.reason}\n`
-    + '          Notifications will be recorded as failed. Check SMTP_HOST, SMTP_PORT, '
-    + 'SMTP_USER and SMTP_PASS.\n'
-    + '          For Gmail, SMTP_PASS must be an App Password, not the account password.',
+    `WARNING -- Email: cannot reach ${target} as ${config.smtp.user} -- ${result.reason}\n`
+    + '          Notifications will be recorded as failed.\n'
+    + (timedOut
+      // A timeout is the connection never opening. Credentials are not
+      // consulted at that point, so nothing about them can be the cause.
+      ? `          A timeout means nothing answered on ${target}. That is the port being\n`
+        + '          blocked, by this host or by the network in between -- not a wrong\n'
+        + '          password, which fails as "535 authentication failed" instead.\n'
+        + '          Try the other port (587 is STARTTLS, 465 is implicit TLS). If both\n'
+        + '          time out, this host does not permit outbound SMTP and no mail\n'
+        + '          provider or credential will change that.'
+      : '          The server answered and rejected us, so the host and port are fine.\n'
+        + '          Check SMTP_USER and SMTP_PASS. With IONOS the user is the full\n'
+        + '          mailbox address; with Gmail the password must be an App Password.'),
   );
   return result;
 };
