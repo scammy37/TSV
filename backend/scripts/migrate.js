@@ -26,11 +26,11 @@ async function migrate({ reset = false } = {}) {
   const schema = fs.readFileSync(SCHEMA_PATH, 'utf8');
 
   if (reset) {
-    console.log(`Dropping existing objects in "${config.db.database}"...`);
+    console.log(`Dropping existing objects in ${config.dbLabel}...`);
     await pool.query(DROP_SQL);
   }
 
-  console.log(`Applying schema to "${config.db.database}"...`);
+  console.log(`Applying schema to ${config.dbLabel}...`);
   await pool.query(schema);
   console.log('Migration complete.');
 }

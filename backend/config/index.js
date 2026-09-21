@@ -100,4 +100,30 @@ if (config.isProduction) {
   }
 }
 
+/**
+ * A name for the database being talked to, for log lines like "Applying schema
+ * to ...". Discrete settings carry the name directly; a DATABASE_URL has to be
+ * parsed, and deliberately not printed whole -- it carries the password, and
+ * log output gets pasted into issue trackers and support threads. URL#host is
+ * host:port with any credentials stripped, so this stays safe to print.
+ */
+const describeDatabase = (db) => {
+  if (db.database) return db.database;
+  try {
+    const url = new URL(db.connectionString);
+    const name = decodeURIComponent(url.pathname.replace(/^\//, ''));
+    return name ? `${name} on ${url.host}` : url.host;
+  } catch {
+    // A connection string libpq accepts but WHATWG URL does not (a bare
+    // "host=... dbname=..." keyword string, say). Nothing useful to name.
+    return 'the configured database';
+  }
+};
+
+config.dbLabel = describeDatabase(config.db);
+
+// Exported so the no-credentials-in-the-label property can be tested against a
+// connection string, which NODE_ENV=test otherwise never takes.
+config.describeDatabase = describeDatabase;
+
 module.exports = config;
