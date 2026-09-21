@@ -110,6 +110,79 @@ describe('PATCH /api/users/:id', () => {
   });
 });
 
+describe('DELETE /api/users/:id', () => {
+  it('removes an account that has no ticket history', async () => {
+    const res = await request(app).delete(`/api/users/${staff.id}`)
+      .set('Authorization', manager.auth());
+    expect(res.status).toBe(204);
+
+    const directory = await request(app).get('/api/users?includeInactive=true')
+      .set('Authorization', manager.auth());
+    expect(directory.body.users.map((u) => u.id)).not.toContain(staff.id);
+  });
+
+  it('stops the token of a deleted account working', async () => {
+    await request(app).delete(`/api/users/${staff.id}`).set('Authorization', manager.auth());
+
+    const res = await request(app).get('/api/auth/me').set('Authorization', staff.auth());
+    expect(res.status).toBe(401);
+  });
+
+  it('refuses an account that appears on a ticket, and says why', async () => {
+    await createTicket(homeowner);
+
+    const res = await request(app).delete(`/api/users/${homeowner.id}`)
+      .set('Authorization', manager.auth());
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatch(/1 ticket\b/);
+    expect(res.body.error).toMatch(/[Dd]eactivate/);
+
+    // The refusal leaves the account exactly as it was.
+    const still = await request(app).get(`/api/users/${homeowner.id}`)
+      .set('Authorization', manager.auth());
+    expect(still.status).toBe(200);
+    expect(still.body.user.isActive).toBe(true);
+  });
+
+  it('leaves a deleted assignee\'s tickets standing, unassigned', async () => {
+    const ticket = await createTicket(homeowner);
+    await request(app).post(`/api/tickets/${ticket.id}/assign`)
+      .set('Authorization', manager.auth()).send({ assignedTo: staff.id });
+
+    const res = await request(app).delete(`/api/users/${staff.id}`)
+      .set('Authorization', manager.auth());
+    expect(res.status).toBe(204);
+
+    const after = await request(app).get(`/api/tickets/${ticket.id}`)
+      .set('Authorization', manager.auth());
+    expect(after.status).toBe(200);
+    expect(after.body.ticket.assignee).toBeNull();
+  });
+
+  it('stops a manager deleting themselves', async () => {
+    const res = await request(app).delete(`/api/users/${manager.id}`)
+      .set('Authorization', manager.auth());
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 404 for a user that does not exist', async () => {
+    const res = await request(app).delete('/api/users/999999')
+      .set('Authorization', manager.auth());
+    expect(res.status).toBe(404);
+  });
+
+  it('is closed to staff and homeowners', async () => {
+    const asStaff = await request(app).delete(`/api/users/${homeowner.id}`)
+      .set('Authorization', staff.auth());
+    expect(asStaff.status).toBe(403);
+
+    const asHomeowner = await request(app).delete(`/api/users/${staff.id}`)
+      .set('Authorization', homeowner.auth());
+    expect(asHomeowner.status).toBe(403);
+  });
+});
+
 describe('GET /api/meta', () => {
   it('returns the categories, priorities and statuses the UI renders', async () => {
     const res = await request(app).get('/api/meta').set('Authorization', homeowner.auth());

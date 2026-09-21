@@ -30,6 +30,10 @@ export default function Users() {
   const [issued, setIssued] = useState(null);
   const [copied, setCopied] = useState(false);
 
+  // Deleting is irreversible and the API refuses it for anyone who appears on
+  // a ticket, so it gets the same in-row confirmation the reset does.
+  const [confirmingDelete, setConfirmingDelete] = useState(null);
+
   const [search, setSearch] = useState('');
   useEffect(() => {
     const timer = setTimeout(() => setFilters((f) => ({ ...f, q: search })), 300);
@@ -84,6 +88,25 @@ export default function Users() {
     } finally {
       setBusyId(null);
       setConfirmingReset(null);
+    }
+  };
+
+  const remove = async (target) => {
+    setBusyId(target.id);
+    setError('');
+    setNotice('');
+    try {
+      await api.deleteUser(target.id);
+      setUsers((current) => current.filter((u) => u.id !== target.id));
+      setNotice(`${target.fullName} deleted`);
+    } catch (err) {
+      // A refusal explains itself -- usually that the account is on a ticket
+      // and should be deactivated instead. Closing the confirmation puts the
+      // Deactivate button back within reach while that message is on screen.
+      setError(errorMessage(err, 'Could not delete that account'));
+    } finally {
+      setBusyId(null);
+      setConfirmingDelete(null);
     }
   };
 
@@ -226,6 +249,23 @@ export default function Users() {
                               </button>
                             </span>
                           </div>
+                        ) : confirmingDelete === u.id ? (
+                          <div className="rowconfirm">
+                            <span>
+                              Delete {u.fullName} permanently? This cannot be
+                              undone.
+                            </span>
+                            <span className="rowconfirm-actions">
+                              <button type="button" className="danger sm" disabled={busyId === u.id}
+                                onClick={() => remove(u)}>
+                                {busyId === u.id ? 'Deleting...' : 'Delete'}
+                              </button>
+                              <button type="button" className="secondary sm" disabled={busyId === u.id}
+                                onClick={() => setConfirmingDelete(null)}>
+                                Cancel
+                              </button>
+                            </span>
+                          </div>
                         ) : (
                           <div className="rowactions">
                             <button
@@ -237,7 +277,7 @@ export default function Users() {
                                   : !u.isActive ? 'Reactivate the account first'
                                     : 'Issue a temporary password'
                               }
-                              onClick={() => { setConfirmingReset(u.id); setIssued(null); }}
+                              onClick={() => { setConfirmingReset(u.id); setConfirmingDelete(null); setIssued(null); }}
                             >
                               Reset password
                             </button>
@@ -250,6 +290,18 @@ export default function Users() {
                                 `${u.fullName} ${u.isActive ? 'deactivated' : 'reactivated'}`)}
                             >
                               {u.isActive ? 'Deactivate' : 'Reactivate'}
+                            </button>
+                            <button
+                              type="button"
+                              className="secondary sm"
+                              disabled={busyId === u.id || isSelf}
+                              title={
+                                isSelf ? 'You cannot delete your own account'
+                                  : 'Remove the account permanently'
+                              }
+                              onClick={() => { setConfirmingDelete(u.id); setConfirmingReset(null); setIssued(null); }}
+                            >
+                              Delete
                             </button>
                           </div>
                         )}

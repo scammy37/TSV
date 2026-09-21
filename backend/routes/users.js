@@ -124,6 +124,51 @@ router.patch('/:id', authorize(ROLES.MANAGEMENT), validate(schemas.idParam, 'par
   }));
 
 /**
+ * DELETE /api/users/:id
+ * Removes an account outright. This is for the stray signup or the duplicate
+ * that should never have existed; deactivation is still the tool for someone
+ * who has simply left.
+ *
+ * Tickets reference the person who filed them with ON DELETE RESTRICT, so an
+ * account that appears on any ticket cannot be removed without taking that
+ * history with it. Those are refused here with a message naming the reason --
+ * the constraint on its own cannot say which account or how many tickets.
+ *
+ * For an account that does go: comments and activity keep their text but lose
+ * their author, anything assigned to them falls back to unassigned, and any
+ * outstanding password reset token is removed with the row.
+ */
+router.delete('/:id', authorize(ROLES.MANAGEMENT), validate(schemas.idParam, 'params'),
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+
+    if (id === req.user.id) throw AppError.badRequest('You cannot delete your own account');
+
+    const { rows } = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+    if (!rows[0]) throw AppError.notFound('User not found');
+    const target = publicUser(rows[0]);
+
+    try {
+      await db.query('DELETE FROM users WHERE id = $1', [id]);
+    } catch (err) {
+      // Let the constraint decide rather than checking first: a count taken
+      // beforehand can go stale between the check and the delete.
+      if (err.code !== '23503') throw err;
+
+      const { rows: [{ count }] } = await db.query(
+        'SELECT COUNT(*)::int AS count FROM tickets WHERE homeowner_id = $1 OR created_by = $1',
+        [id],
+      );
+      throw AppError.conflict(
+        `${target.fullName} appears on ${count} ticket${count === 1 ? '' : 's'} and cannot be deleted `
+        + 'without losing that history. Deactivate the account instead.',
+      );
+    }
+
+    res.status(204).end();
+  }));
+
+/**
  * POST /api/users/:id/reset-password
  * Sets a temporary password and returns it once, for a manager to pass to the
  * resident in person or over the phone.

@@ -78,6 +78,7 @@ export const api = {
   assignableUsers: () => client.get('/users/assignable').then((r) => r.data.users),
   listUsers: (params) => client.get('/users', { params }).then((r) => r.data),
   updateUser: (id, payload) => client.patch(`/users/${id}`, payload).then((r) => r.data.user),
+  deleteUser: (id) => client.delete(`/users/${id}`).then(() => undefined),
   resetUserPassword: (id) => client.post(`/users/${id}/reset-password`).then((r) => r.data),
 
   reportSummary: () => client.get('/reports/summary').then((r) => r.data),
