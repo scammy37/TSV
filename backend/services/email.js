@@ -7,6 +7,11 @@ const { PRIORITY_LABELS, STATUS_LABELS } = require('../constants');
 let transporter;
 let warnedUnconfigured = false;
 
+const int = (value, fallback) => {
+  const parsed = parseInt(value, 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
+};
+
 /** True when there is enough configuration to actually send mail. */
 const isConfigured = () => Boolean(config.smtp.host && config.smtp.user);
 
@@ -20,6 +25,16 @@ const getTransporter = () => {
       port: config.smtp.port,
       secure: config.smtp.port === 465,
       auth: { user: config.smtp.user, pass: config.smtp.pass },
+
+      // Nodemailer waits two minutes on a connection by default. Where a host
+      // blocks the SMTP port -- which is silence rather than a refusal -- that
+      // makes the boot check appear to print nothing at all for two minutes,
+      // and it is the first thing anyone looks at when mail is not arriving.
+      // Ten seconds is far longer than a reachable server needs and short
+      // enough that the verdict is in the log while someone is still reading.
+      connectionTimeout: int(process.env.SMTP_CONNECTION_TIMEOUT_MS, 10000),
+      greetingTimeout: int(process.env.SMTP_GREETING_TIMEOUT_MS, 10000),
+      socketTimeout: int(process.env.SMTP_SOCKET_TIMEOUT_MS, 30000),
     });
   }
   return transporter;
