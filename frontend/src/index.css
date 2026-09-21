@@ -621,19 +621,6 @@ th.num { text-align: right; }
 }
 .home-steps-inline strong { color: var(--text); font-weight: 650; }
 
-/* Urgent work needs a person, not a queue. Kept visually distinct from the
-   ordinary call to action so it is not mistaken for another way to file. */
-.home-urgent {
-  margin-top: 22px; padding: 16px 18px; border-radius: var(--radius);
-  background: var(--danger-bg); border: 1px solid var(--danger);
-}
-.home-urgent h3 {
-  font-family: var(--font-display); font-weight: 700;
-  margin: 0 0 6px; font-size: 15.5px; color: var(--danger);
-}
-.home-urgent p { margin: 0; color: var(--text); font-size: 14.2px; line-height: 1.6; }
-.home-urgent p + p { margin-top: 8px; }
-
 /* The people table's row controls, and the inline confirm that replaces them
    while a password reset is being agreed to. */
 .rowactions { display: flex; gap: 8px; justify-content: flex-end; }

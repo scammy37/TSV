@@ -113,21 +113,6 @@ export default function Home() {
               )}
             </div>
 
-            <div className="home-urgent">
-              <h3>If it cannot wait</h3>
-              <p>
-                For anything threatening life or property &mdash; fire, a gas odour, flooding
-                &mdash; call <strong>911</strong> first.
-              </p>
-              <p>
-                For urgent maintenance such as a burst pipe, no heat or no water, call the
-                association office on{' '}
-                <a className="home-phone" href={OFFICE_PHONE_HREF}>{OFFICE_PHONE}</a>.
-                A request filed here is reviewed during office hours, so it is not the
-                fastest route out of hours.
-              </p>
-            </div>
-
             {/* The steps follow the call to action they explain, which also
                 takes up the run of empty column the sidebar used to leave. */}
             <ol className="home-steps home-steps-inline">
