@@ -62,7 +62,7 @@ const config = {
     port: int(process.env.SMTP_PORT, 587),
     user: process.env.SMTP_USER || '',
     pass: process.env.SMTP_PASS || '',
-    from: process.env.SMTP_FROM || 'noreply@complexmanagement.com',
+    from: process.env.SMTP_FROM || 'Townsquare Village HOA <office@townsquarevillagenj.com>',
   },
 
   bcryptRounds: int(process.env.BCRYPT_ROUNDS, env === 'test' ? 4 : 10),
