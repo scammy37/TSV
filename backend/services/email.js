@@ -80,11 +80,17 @@ const layout = (heading, bodyHtml, ticket) => `
         <a href="${ticketUrl(ticket)}"
            style="background:#2f6fed;color:#fff;text-decoration:none;
                   padding:10px 18px;border-radius:6px;display:inline-block">
-          View ticket ${escapeHtml(ticket.ticket_number)}
+          Open request ${escapeHtml(ticket.ticket_number)} to reply
         </a>
+      </p>
+      <p style="margin:12px 0 0;font-size:13px;color:#67707f">
+        Replying there keeps your message with the request, where management
+        sees it alongside the rest of the history.
       </p>` : ''}
     <p style="margin:28px 0 0;font-size:12px;color:#8a94a6">
-      This is an automated message; replies to this address are not monitored.
+      Sent automatically by ${escapeHtml(config.appName)}. You can reply to this
+      email to reach the association office, but a message left on the request
+      itself will be answered faster.
     </p>
   </div>`;
 
