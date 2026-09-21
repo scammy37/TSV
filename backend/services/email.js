@@ -84,8 +84,8 @@ const layout = (heading, bodyHtml, ticket) => `
         </a>
       </p>
       <p style="margin:12px 0 0;font-size:13px;color:#67707f">
-        Replying there keeps your message with the request, where management
-        sees it alongside the rest of the history.
+        Replying there keeps your message with the request, where everyone
+        working on it sees it alongside the rest of the history.
       </p>` : ''}
     <p style="margin:28px 0 0;font-size:12px;color:#8a94a6">
       Sent automatically by ${escapeHtml(config.appName)} from an address that
