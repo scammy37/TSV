@@ -130,9 +130,9 @@ const buildListQuery = (filters, user) => {
   }
 
   if (filters.open === true) {
-    where.push(`t.status NOT IN ('resolved', 'closed', 'cancelled')`);
+    where.push(`t.status NOT IN ('closed', 'cancelled')`);
   } else if (filters.open === false) {
-    where.push(`t.status IN ('resolved', 'closed', 'cancelled')`);
+    where.push(`t.status IN ('closed', 'cancelled')`);
   }
 
   if (filters.q) {

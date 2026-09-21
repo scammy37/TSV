@@ -45,7 +45,7 @@ export default function HomeownerDashboard() {
   }), [meta]);
 
   const openCount = data.tickets.filter(
-    (t) => !['resolved', 'closed', 'cancelled'].includes(t.status),
+    (t) => !['closed', 'cancelled'].includes(t.status),
   ).length;
 
   return (

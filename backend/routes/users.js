@@ -26,7 +26,7 @@ router.get('/assignable', asyncHandler(async (req, res) => {
 
   const { rows } = await db.query(
     `SELECT u.*, COUNT(t.id) FILTER (
-              WHERE t.status NOT IN ('resolved', 'closed', 'cancelled')
+              WHERE t.status NOT IN ('closed', 'cancelled')
             )::int AS open_ticket_count
      FROM users u
      LEFT JOIN tickets t ON t.assigned_to = u.id

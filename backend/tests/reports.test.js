@@ -55,31 +55,31 @@ describe('GET /api/reports/summary', () => {
     const second = await createTicket(homeowner, { title: 'Resolved after a while' });
 
     await request(app).patch(`/api/tickets/${first.id}`)
-      .set('Authorization', staff.auth()).send({ status: 'resolved' });
+      .set('Authorization', staff.auth()).send({ status: 'closed' });
     await request(app).patch(`/api/tickets/${second.id}`)
-      .set('Authorization', staff.auth()).send({ status: 'resolved' });
+      .set('Authorization', staff.auth()).send({ status: 'closed' });
 
     const res = await request(app).get('/api/reports/summary').set('Authorization', manager.auth());
 
     expect(res.body.totals.avgResolutionHours).toEqual(expect.any(Number));
     expect(res.body.totals.resolvedLast7Days).toBe(2);
-    expect(res.body.byStatus.resolved).toBe(2);
+    expect(res.body.byStatus.closed).toBe(2);
     // Nothing is left open, so there is no oldest open ticket.
     expect(res.body.totals.oldestOpenHours).toBeNull();
   });
 
   it('breaks work down by category and assignee', async () => {
-    const plumbing = await createTicket(homeowner, { category: 'plumbing' });
-    await createTicket(homeowner, { category: 'electrical', title: 'Hallway light is out' });
+    const landscaping = await createTicket(homeowner, { category: 'landscaping' });
+    await createTicket(homeowner, { category: 'security', title: 'Front gate keypad is dead' });
 
-    await request(app).post(`/api/tickets/${plumbing.id}/assign`)
+    await request(app).post(`/api/tickets/${landscaping.id}/assign`)
       .set('Authorization', manager.auth()).send({ assignedTo: staff.id });
 
     const res = await request(app).get('/api/reports/summary').set('Authorization', manager.auth());
 
     const categories = Object.fromEntries(res.body.byCategory.map((c) => [c.category, c.count]));
-    expect(categories).toMatchObject({ plumbing: 1, electrical: 1 });
-    expect(res.body.byCategory.find((c) => c.category === 'plumbing').name).toBe('Plumbing');
+    expect(categories).toMatchObject({ landscaping: 1, security: 1 });
+    expect(res.body.byCategory.find((c) => c.category === 'landscaping').name).toBe('Landscaping');
 
     const assignee = res.body.byAssignee.find((a) => a.id === staff.id);
     expect(assignee.openCount).toBe(1);

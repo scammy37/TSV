@@ -77,7 +77,7 @@ export default function Reports() {
           <div className="stat-sub">longest unresolved</div>
         </div>
         <div className="stat">
-          <div className="stat-label">Avg resolution</div>
+          <div className="stat-label">Avg time to close</div>
           <div className="stat-value">{formatHours(totals.avgResolutionHours)}</div>
           <div className="stat-sub">first report to fix</div>
         </div>
@@ -91,7 +91,7 @@ export default function Reports() {
       <div className="card">
         <h3>Last 7 days</h3>
         <BarRow label="Created" count={totals.createdLast7Days} max={maxWeekly} />
-        <BarRow label="Resolved" count={totals.resolvedLast7Days} max={maxWeekly}
+        <BarRow label="Closed" count={totals.resolvedLast7Days} max={maxWeekly}
           color="var(--success)" />
       </div>
 
@@ -128,7 +128,7 @@ export default function Reports() {
                 <th>Staff member</th>
                 <th className="num">Open</th>
                 <th className="num">{`Over ${agingDays}d`}</th>
-                <th className="num">Resolved (30d)</th>
+                <th className="num">Closed (30d)</th>
               </tr>
             </thead>
             <tbody>

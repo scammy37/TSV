@@ -28,7 +28,7 @@ const TICKETS = [
   {
     homeowner: 'dana@demo.test', title: 'Kitchen sink is leaking badly',
     description: 'Water pools under the cabinet every morning and the wood is starting to swell.',
-    category: 'plumbing', priority: 'high', location: 'Under the kitchen sink',
+    category: 'common_area', priority: 'high', location: 'Under the clubhouse sink',
     assignee: 'sam@demo.test', status: 'in_progress', daysAgo: 2,
     comments: [
       { from: 'sam@demo.test', body: 'Plumber is booked for Thursday morning between 9 and 11.' },
@@ -39,39 +39,39 @@ const TICKETS = [
   {
     homeowner: 'alex@demo.test', title: 'Hallway light flickering all night',
     description: 'The light outside my door flickers constantly and is keeping us awake.',
-    category: 'electrical', priority: 'high', assignee: 'priya@demo.test',
+    category: 'common_area', priority: 'high', assignee: 'priya@demo.test',
     status: 'in_progress', daysAgo: 1,
     comments: [{ from: 'priya@demo.test', body: 'Replacing the ballast this afternoon.' }],
   },
   {
     homeowner: 'jordan@demo.test', title: 'No hot water since Tuesday',
     description: 'The water never gets above lukewarm, at any time of day.',
-    category: 'plumbing', priority: 'high', daysAgo: 0,
+    category: 'landscaping', priority: 'high', daysAgo: 0,
   },
   {
     homeowner: 'dana@demo.test', title: 'Dishwasher not draining properly',
     description: 'Standing water is left in the bottom after every cycle.',
-    category: 'appliance', priority: 'medium', daysAgo: 4,
+    category: 'violation', priority: 'medium', daysAgo: 4,
   },
   {
     homeowner: 'alex@demo.test', title: 'Balcony door will not latch',
     description: 'The sliding door on the balcony no longer latches shut and swings open in wind.',
-    category: 'structural', priority: 'medium', assignee: 'sam@demo.test',
+    category: 'security', priority: 'medium', assignee: 'sam@demo.test',
     status: 'on_hold', daysAgo: 9,
     comments: [{ from: 'sam@demo.test', body: 'Waiting on the replacement latch, due next week.' }],
   },
   {
     homeowner: 'jordan@demo.test', title: 'Ants in the kitchen cupboards',
     description: 'A trail of ants along the counter every morning, coming from behind the cupboard.',
-    category: 'pest_control', priority: 'low', assignee: 'priya@demo.test',
-    status: 'resolved', daysAgo: 12, resolvedDaysAgo: 10,
+    category: 'other', priority: 'low', assignee: 'priya@demo.test',
+    status: 'closed', daysAgo: 12, resolvedDaysAgo: 10,
     resolution: 'Pest control treated the unit and sealed the gap behind the cupboard.',
   },
   {
     homeowner: 'dana@demo.test', title: 'Gym treadmill making a grinding noise',
     description: 'The treadmill nearest the window grinds loudly under load.',
     category: 'common_area', priority: 'low', assignee: 'sam@demo.test',
-    status: 'resolved', daysAgo: 20, resolvedDaysAgo: 6,
+    status: 'closed', daysAgo: 20, resolvedDaysAgo: 6,
     resolution: 'Belt replaced and deck re-lubricated by the service contractor.',
   },
   {

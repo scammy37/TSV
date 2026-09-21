@@ -102,10 +102,10 @@ const templates = {
       ${detailRows(ticket)}`, ticket),
   }),
 
-  ticket_resolved: ({ ticket }) => ({
-    subject: `[${ticket.ticket_number}] Resolved: ${ticket.title}`,
-    html: layout('Your ticket has been resolved', `
-      <p>Management marked this request resolved.</p>
+  ticket_closed: ({ ticket }) => ({
+    subject: `[${ticket.ticket_number}] Closed: ${ticket.title}`,
+    html: layout('Your ticket has been closed', `
+      <p>Management marked this request finished and closed it.</p>
       ${ticket.resolution_notes
         ? `<p style="font-size:14px;white-space:pre-wrap"><strong>Resolution:</strong><br>
              ${escapeHtml(ticket.resolution_notes)}</p>`

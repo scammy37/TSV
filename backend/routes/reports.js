@@ -28,7 +28,7 @@ router.get('/summary', asyncHandler(async (req, res) => {
     db.query('SELECT status, COUNT(*)::int AS count FROM tickets GROUP BY status'),
 
     db.query(`SELECT priority, COUNT(*)::int AS count FROM tickets
-              WHERE status NOT IN ('resolved', 'closed', 'cancelled')
+              WHERE status NOT IN ('closed', 'cancelled')
               GROUP BY priority`),
 
     db.query(`SELECT t.category, c.name AS category_name, COUNT(*)::int AS count
@@ -39,11 +39,11 @@ router.get('/summary', asyncHandler(async (req, res) => {
     db.query(`
       SELECT
         COUNT(*)::int AS total,
-        COUNT(*) FILTER (WHERE status NOT IN ('resolved','closed','cancelled'))::int AS open,
+        COUNT(*) FILTER (WHERE status NOT IN ('closed','cancelled'))::int AS open,
         COUNT(*) FILTER (WHERE assigned_to IS NULL
-                           AND status NOT IN ('resolved','closed','cancelled'))::int AS unassigned,
+                           AND status NOT IN ('closed','cancelled'))::int AS unassigned,
         COUNT(*) FILTER (WHERE created_at < now() - make_interval(days => ${AGING_DAYS})
-                           AND status NOT IN ('resolved','closed','cancelled'))::int AS aging_open,
+                           AND status NOT IN ('closed','cancelled'))::int AS aging_open,
         COUNT(*) FILTER (WHERE created_at > now() - interval '7 days')::int AS created_last_7_days,
         COUNT(*) FILTER (WHERE resolved_at > now() - interval '7 days')::int AS resolved_last_7_days,
         AVG(EXTRACT(EPOCH FROM (resolved_at - created_at)) / 3600)
@@ -51,15 +51,15 @@ router.get('/summary', asyncHandler(async (req, res) => {
         AVG(EXTRACT(EPOCH FROM (first_response_at - created_at)) / 3600)
           FILTER (WHERE first_response_at IS NOT NULL) AS avg_first_response_hours,
         MAX(EXTRACT(EPOCH FROM (now() - created_at)) / 3600)
-          FILTER (WHERE status NOT IN ('resolved','closed','cancelled')) AS oldest_open_hours
+          FILTER (WHERE status NOT IN ('closed','cancelled')) AS oldest_open_hours
       FROM tickets`),
 
     db.query(`
       SELECT u.id, u.first_name, u.last_name,
-             COUNT(t.id) FILTER (WHERE t.status NOT IN ('resolved','closed','cancelled'))::int AS open_count,
+             COUNT(t.id) FILTER (WHERE t.status NOT IN ('closed','cancelled'))::int AS open_count,
              COUNT(t.id) FILTER (WHERE t.resolved_at > now() - interval '30 days')::int AS resolved_30d,
              COUNT(t.id) FILTER (WHERE t.created_at < now() - make_interval(days => ${AGING_DAYS})
-                                   AND t.status NOT IN ('resolved','closed','cancelled'))::int AS aging_count
+                                   AND t.status NOT IN ('closed','cancelled'))::int AS aging_count
       FROM users u
       LEFT JOIN tickets t ON t.assigned_to = u.id
       WHERE u.role IN ('staff','management') AND u.is_active
