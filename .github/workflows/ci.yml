@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Starting a run by hand covers the PR that never got one of its own,
+  # and re-running CI against a branch without an empty commit to push.
+  workflow_dispatch:
 
 # A new push to a PR makes the in-flight run irrelevant.
 concurrency:
