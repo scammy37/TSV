@@ -150,9 +150,14 @@ describe('API key scope', () => {
           res.end(JSON.stringify(payload));
         };
         if (req.url === '/domains') {
-          return domainsStatus === 200
-            ? json(200, { data: [] })
-            : json(403, { name: 'restricted_api_key', message: 'restricted to only send emails' });
+          if (domainsStatus === 200) return json(200, { data: [] });
+          // Verbatim from a real Resend response to a sending-only key. Note
+          // the 401: the same status it returns for a key that is simply
+          // wrong, which is why the wording has to carry the distinction.
+          return json(401, {
+            name: 'restricted_api_key',
+            message: 'This API key is restricted to only send emails',
+          });
         }
         if (req.url === '/emails') return json(200, { id: 'msg_scoped' });
         return json(404, { message: 'no' });
@@ -164,12 +169,12 @@ describe('API key scope', () => {
     }));
   });
 
-  it('accepts a sending-only key, which cannot list domains', async () => {
+  it('accepts a sending-only key, which Resend refuses with a 401', async () => {
     // The correctly-scoped key for this app can do nothing but send, so the
     // 403 it gets here means it is right, not broken. Reporting that as a
     // failed check would tell the operator to fix a key that is already
     // exactly what it should be.
-    const stub = await startStub(403);
+    const stub = await startStub(401);
     const mailer = createMailer({ apiKey: 're_send_only', apiBase: stub.apiBase });
 
     const result = await mailer.verify();
@@ -183,6 +188,21 @@ describe('API key scope', () => {
     })).resolves.toMatchObject({ messageId: 'msg_scoped' });
 
     await stub.close();
+  });
+
+  it('still fails an invalid key, which arrives with the same 401', async () => {
+    const http = require('http');
+    const server = http.createServer((req, res) => {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ name: 'validation_error', message: 'API key is invalid' }));
+    });
+    await new Promise((r) => server.listen(0, '127.0.0.1', r));
+    const mailer = createMailer({
+      apiKey: 're_wrong',
+      apiBase: `http://127.0.0.1:${server.address().port}`,
+    });
+    await expect(mailer.verify()).rejects.toThrow(/API key is invalid/);
+    await new Promise((r) => server.close(r));
   });
 
   it('reports a full-access key as fully verified', async () => {

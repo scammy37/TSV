@@ -18,6 +18,11 @@ const API = 'https://api.resend.com';
 // timeout here costs a notification, not a request.
 const TIMEOUT_MS = 15000;
 
+// How Resend describes a key that may only send. Matched on the wording
+// because the status code it arrives with does not distinguish it from a key
+// that is outright invalid.
+const RESTRICTED = /restricted|only send/i;
+
 const request = async (path, { method = 'GET', apiKey, body, apiBase = API } = {}) => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -104,7 +109,11 @@ const createMailer = ({ apiKey, apiBase = API }) => ({
       await request('/domains', { apiKey, apiBase });
       return { ok: true, verified: true };
     } catch (err) {
-      if (err.statusCode === 403) {
+      // Resend answers a restricted key with 401 and an explanatory message,
+      // not the 403 the status alone would suggest -- the same status it uses
+      // for a key that is simply wrong. So the message is what separates
+      // "correctly scoped" from "invalid", and the status cannot.
+      if (RESTRICTED.test(err.message || '')) {
         return {
           ok: true,
           verified: false,
