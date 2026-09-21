@@ -65,7 +65,7 @@ export default function Home() {
             ) : (
               <>
                 <Link to="/login" className="home-link">Sign in</Link>
-                <Link to="/register" className="home-btn home-btn-primary">Submit a request</Link>
+                <Link to="/tickets/new" className="home-btn home-btn-primary">Submit a request</Link>
               </>
             )}
           </div>
@@ -103,11 +103,19 @@ export default function Home() {
                 </Link>
               ) : (
                 <div className="home-cta-actions">
-                  <Link to="/register" className="home-btn home-btn-primary home-btn-lg">
+                  {/* Straight to the form, signed in or not. A visitor without a
+                      session is sent to sign in and returned here afterwards,
+                      so this button does not have to guess which of the two
+                      they are -- which is what sending everyone to the
+                      registration form got wrong. */}
+                  <Link to="/tickets/new" className="home-btn home-btn-primary home-btn-lg">
                     Submit a request
                   </Link>
                   <Link to="/login" className="home-btn home-btn-quiet home-btn-lg">
-                    I already have an account
+                    Sign in
+                  </Link>
+                  <Link to="/register" className="home-btn home-btn-quiet home-btn-lg">
+                    Create an account
                   </Link>
                 </div>
               )}
