@@ -15,9 +15,8 @@ const db = require('../db/connection');
 async function main() {
   const recipient = process.argv[2];
 
-  console.log(`SMTP host: ${config.smtp.host || '(not set)'}`);
-  console.log(`SMTP user: ${config.smtp.user || '(not set)'}`);
-  console.log(`From:      ${config.smtp.from}`);
+  console.log(`Transport: ${email.describeTransport()}`);
+  console.log(`From:      ${config.mail.from}`);
   console.log('');
 
   const result = await email.verify();

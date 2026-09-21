@@ -65,6 +65,24 @@ const config = {
     from: process.env.SMTP_FROM || 'Townsquare Village HOA <office@townsquarevillagenj.com>',
   },
 
+  // Sending over HTTPS instead of SMTP. Required on a host that blocks
+  // outbound mail ports -- which this one does, on every port and provider
+  // tried, so no SMTP credential can work here. Used in preference to SMTP.
+  resend: {
+    apiKey: process.env.RESEND_API_KEY || '',
+    // Overridable so the tests can point at a local stand-in. No deployment
+    // should set it.
+    apiBase: process.env.RESEND_API_BASE || 'https://api.resend.com',
+  },
+
+  // Who notifications come from, whichever transport carries them. Falls back
+  // to SMTP_FROM so an existing deployment keeps its configured sender.
+  mail: {
+    from: process.env.MAIL_FROM
+      || process.env.SMTP_FROM
+      || 'Townsquare Village HOA <office@townsquarevillagenj.com>',
+  },
+
   bcryptRounds: int(process.env.BCRYPT_ROUNDS, env === 'test' ? 4 : 10),
 
   // When true the API also serves frontend/build, so the whole app runs on one
