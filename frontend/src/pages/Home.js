@@ -64,8 +64,8 @@ export default function Home() {
               <Link to="/dashboard" className="home-btn home-btn-primary">My requests</Link>
             ) : (
               <>
-                <Link to="/login" className="home-link">Sign in</Link>
-                <Link to="/tickets/new" className="home-btn home-btn-primary">Submit a request</Link>
+                <Link to="/register" className="home-link">Create an account</Link>
+                <Link to="/login" className="home-btn home-btn-primary">Sign in</Link>
               </>
             )}
           </div>
@@ -97,21 +97,16 @@ export default function Home() {
                 You will see its status and every update along the way, right through to
                 closing. Repairs inside your own home stay with the homeowner.
               </p>
+              {/* Filing a request needs an account, so a signed-out visitor is
+                  offered the two ways to have one rather than a button leading
+                  somewhere they cannot yet go. */}
               {user ? (
                 <Link to="/tickets/new" className="home-btn home-btn-primary home-btn-lg">
                   Submit a request
                 </Link>
               ) : (
                 <div className="home-cta-actions">
-                  {/* Straight to the form, signed in or not. A visitor without a
-                      session is sent to sign in and returned here afterwards,
-                      so this button does not have to guess which of the two
-                      they are -- which is what sending everyone to the
-                      registration form got wrong. */}
-                  <Link to="/tickets/new" className="home-btn home-btn-primary home-btn-lg">
-                    Submit a request
-                  </Link>
-                  <Link to="/login" className="home-btn home-btn-quiet home-btn-lg">
+                  <Link to="/login" className="home-btn home-btn-primary home-btn-lg">
                     Sign in
                   </Link>
                   <Link to="/register" className="home-btn home-btn-quiet home-btn-lg">
