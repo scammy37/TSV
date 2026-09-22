@@ -109,6 +109,34 @@ const detailRows = (ticket) => `
         <td>${escapeHtml(STATUS_LABELS[ticket.status] || ticket.status)}</td></tr>
   </table>`;
 
+const infoRow = (label, value) => (value
+  ? `<tr><td style="padding:3px 16px 3px 0;color:#67707f;vertical-align:top">${escapeHtml(label)}</td>
+         <td>${escapeHtml(value)}</td></tr>`
+  : '');
+
+/**
+ * The association is in New Jersey and the server runs in UTC, so a raw
+ * timestamp reads a few hours off to everyone who receives this. Fix it here
+ * rather than leaving each reader to do the arithmetic.
+ */
+const easternTime = (value) => (value
+  ? new Date(value).toLocaleString('en-US', {
+    timeZone: 'America/New_York',
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  })
+  : '');
+
+const personRows = (user) => `
+  <table style="border-collapse:collapse;font-size:14px">
+    ${infoRow('Name', [user.first_name, user.last_name].filter(Boolean).join(' '))}
+    ${infoRow('Email', user.email)}
+    ${infoRow('Address', user.unit_number)}
+    ${infoRow('Phone', user.phone)}
+    ${infoRow('Role', user.role.charAt(0).toUpperCase() + user.role.slice(1))}
+    ${infoRow('Registered', easternTime(user.created_at))}
+  </table>`;
+
 // Each template returns { subject, html } for a given ticket + context.
 const templates = {
   ticket_created: ({ ticket }) => ({
@@ -173,6 +201,17 @@ const templates = {
       <p style="font-size:14px;color:#67707f">
         This link works once and expires in ${ttlMinutes} minutes. If you did not
         request it, you can ignore this email -- your password will not change.</p>`),
+  }),
+
+  user_registered: ({ newUser }) => ({
+    subject: `New account: ${newUser.first_name} ${newUser.last_name}`,
+    html: layout('A new account was created', `
+      <p>Someone has registered on the resident portal. This is a notice only
+         &mdash; the account already works and there is nothing to approve.</p>
+      ${personRows(newUser)}
+      <p style="margin:20px 0 0;font-size:13px;color:#67707f">
+        If this is not somebody who lives here, deactivate the account from the
+        People page. A deactivated account is signed out immediately.</p>`),
   }),
 
   ticket_comment: ({ ticket, comment, author }) => ({
@@ -272,21 +311,50 @@ const managementRecipients = async () => {
 };
 
 /**
- * Fire-and-forget notification to every active manager, skipping `exclude`
+ * Management, plus whoever ADMIN_NOTIFY_EMAIL names. That address exists so
+ * somebody hears about a signup at an inbox they actually watch, which is not
+ * necessarily the one their management account is registered under -- and so
+ * the notice still arrives before any management account exists at all.
+ *
+ * Deduplicated case-insensitively: addresses are case-insensitive in practice,
+ * and the alternative is the same person getting two copies of everything the
+ * day they set this to their own account's address.
+ */
+const adminRecipients = async () => {
+  const recipients = await managementRecipients();
+  const extra = config.mail.adminNotify;
+  if (extra && !recipients.some((addr) => addr.toLowerCase() === extra.toLowerCase())) {
+    recipients.push(extra);
+  }
+  return recipients;
+};
+
+/**
+ * Fire-and-forget notification to a whole audience, skipping `exclude`
  * (typically the homeowner, who already got their own copy).
  */
-const notifyManagement = (templateName, context, { exclude = [] } = {}) => {
-  const promise = managementRecipients()
+const notifyEach = (recipientsFor, templateName, context, { exclude = [] } = {}) => {
+  const promise = recipientsFor()
     .then((recipients) => Promise.allSettled(
       recipients
         .filter((addr) => !exclude.includes(addr))
         .map((addr) => send(templateName, addr, context)),
     ))
-    .catch((err) => console.error('Failed to notify management:', err.message))
+    .catch((err) => console.error(`Failed to send "${templateName}":`, err.message))
     .finally(() => pending.delete(promise));
   pending.add(promise);
   return promise;
 };
+
+/** Every active manager. */
+const notifyManagement = (templateName, context, options) => (
+  notifyEach(managementRecipients, templateName, context, options)
+);
+
+/** Every active manager, and ADMIN_NOTIFY_EMAIL if one is set. */
+const notifyAdmins = (templateName, context, options) => (
+  notifyEach(adminRecipients, templateName, context, options)
+);
 
 /**
  * Proves the SMTP settings before anything depends on them. Called at boot and
@@ -389,10 +457,12 @@ module.exports = {
   describeTransport,
   notify,
   notifyManagement,
+  notifyAdmins,
   flush,
   verify,
   verifyAtStartup,
   isConfigured,
   templates,
   managementRecipients,
+  adminRecipients,
 };

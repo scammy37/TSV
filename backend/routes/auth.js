@@ -10,7 +10,7 @@ const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const { publicUser } = require('../utils/serialize');
 const { ROLES } = require('../constants');
-const email = require('../services/email');
+const emailService = require('../services/email');
 const passwordReset = require('../services/passwordReset');
 
 const router = express.Router();
@@ -46,6 +46,13 @@ router.post('/register', validate(schemas.register), asyncHandler(async (req, re
   );
 
   const user = rows[0];
+
+  // Fire-and-forget, like every other notification: whoever watches signups
+  // hears about this, and a mail failure never costs the resident their
+  // account. `email` is shadowed by the address in scope here, hence the
+  // module being reached through its own name.
+  emailService.notifyAdmins('user_registered', { newUser: user });
+
   res.status(201).json({ token: signToken(user), user: publicUser(user) });
 }));
 
@@ -82,7 +89,7 @@ router.post('/forgot-password', validate(schemas.requestPasswordReset), asyncHan
   if (user) {
     const { token } = await passwordReset.issue(user.id);
     const resetUrl = `${config.frontendUrl.split(',')[0]}/reset-password?token=${token}`;
-    email.notify('password_reset', user.email, {
+    emailService.notify('password_reset', user.email, {
       user,
       resetUrl,
       ttlMinutes: passwordReset.TOKEN_TTL_MINUTES,

@@ -88,6 +88,12 @@ const config = {
     // Where to send someone who genuinely needs a person, quoted in emails
     // that have no request to point at -- a password reset, say.
     office: process.env.OFFICE_EMAIL || 'office@townsquarevillagenj.com',
+
+    // An extra recipient for the notices that are about running the
+    // association rather than about a ticket -- a new account, so far.
+    // Deliberately has no default: an address hard-coded here would keep
+    // mailing somebody long after they stopped being the person who wanted it.
+    adminNotify: process.env.ADMIN_NOTIFY_EMAIL || '',
   },
 
   bcryptRounds: int(process.env.BCRYPT_ROUNDS, env === 'test' ? 4 : 10),

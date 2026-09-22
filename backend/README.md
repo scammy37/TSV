@@ -146,6 +146,23 @@ some inbox detached from the ticket. `OFFICE_EMAIL` is quoted instead in the
 few emails that have no request to point at, so nobody is left with no way to
 reach a person.
 
+### Who hears about a new account
+
+Every account created through `POST /auth/register` sends a `user_registered`
+notice — the person's name, email, address, phone and role — to every active
+management account, and to `ADMIN_NOTIFY_EMAIL` if one is set.
+
+That second address exists because the inbox somebody actually watches is not
+always the one their management account is registered under, and because the
+notice should still arrive before any management account exists at all. It can
+be a personal address; it does not have to belong to a user of this site. It is
+deduplicated against the management list case-insensitively, so setting it to
+your own account's address does not send you two of everything.
+
+The timestamp in that email is rendered in `America/New_York`. The server runs
+in UTC, and an hour-shifted signup time is the kind of small wrongness nobody
+reports and everybody works around.
+
 ## Roles
 
 | Role | Can do |

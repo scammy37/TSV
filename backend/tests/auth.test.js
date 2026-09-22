@@ -250,3 +250,69 @@ describe('changing your own email address', () => {
     expect(res.body.user.phone).toBe('555-0123');
   });
 });
+
+describe('new-account notice', () => {
+  const emailService = require('../services/email');
+  const config = require('../config');
+
+  // Creating the managers registers them too, and that fires this very
+  // notification. Clear the log so each test reads only the signup it is about.
+  const registerAndCollect = async () => {
+    await emailService.flush();
+    await db.query('DELETE FROM email_logs');
+
+    await request(app).post('/api/auth/register').send({
+      email: uniqueEmail('newcomer'),
+      password: 'Password123!',
+      firstName: 'Nina',
+      lastName: 'Okafor',
+      unitNumber: '12 Pondview Terrace',
+    });
+
+    await emailService.flush();
+    const { rows } = await db.query(
+      "SELECT recipient_email, subject FROM email_logs WHERE template = 'user_registered'",
+    );
+    return rows;
+  };
+
+  afterEach(() => { config.mail.adminNotify = ''; });
+
+  it('tells every active manager, and nobody who was deactivated', async () => {
+    const manager = await createUser({ role: 'management' });
+    const former = await createUser({ role: 'management' });
+    await db.query('UPDATE users SET is_active = false WHERE id = $1', [former.id]);
+
+    const rows = await registerAndCollect();
+
+    expect(rows.map((r) => r.recipient_email)).toEqual([manager.email]);
+    expect(rows[0].subject).toBe('New account: Nina Okafor');
+  });
+
+  it('copies ADMIN_NOTIFY_EMAIL, which need not have an account here', async () => {
+    const manager = await createUser({ role: 'management' });
+    config.mail.adminNotify = 'watcher@example.test';
+
+    const rows = await registerAndCollect();
+
+    expect(rows.map((r) => r.recipient_email).sort())
+      .toEqual([manager.email, 'watcher@example.test'].sort());
+  });
+
+  it('reaches somebody even before any management account exists', async () => {
+    config.mail.adminNotify = 'watcher@example.test';
+
+    const rows = await registerAndCollect();
+
+    expect(rows.map((r) => r.recipient_email)).toEqual(['watcher@example.test']);
+  });
+
+  it('sends one copy when ADMIN_NOTIFY_EMAIL is a manager, whatever the case', async () => {
+    const manager = await createUser({ role: 'management' });
+    config.mail.adminNotify = manager.email.toUpperCase();
+
+    const rows = await registerAndCollect();
+
+    expect(rows.map((r) => r.recipient_email)).toEqual([manager.email]);
+  });
+});
