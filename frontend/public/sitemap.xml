@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  One entry, because one page is public: everything else needs a login and is
+  disallowed in robots.txt. The file exists anyway because Search Console
+  takes a sitemap as the way to say "index this site", and a sitemap of one
+  URL does that job as well as a sitemap of a hundred.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://townsquarevillagenj.com/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>

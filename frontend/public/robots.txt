@@ -14,3 +14,6 @@ Disallow: /reports
 Disallow: /reset-password
 Disallow: /tickets
 Disallow: /users
+
+# Where the crawlable pages are listed.
+Sitemap: https://townsquarevillagenj.com/sitemap.xml
